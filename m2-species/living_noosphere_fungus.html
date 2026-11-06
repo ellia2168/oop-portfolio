@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活體噬電真菌原生體 (海克爾手繪質態 3D 動態生物模擬器)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111411;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud * { pointer-events: auto; }
+
+    header {
+      top: 22px;
+      left: 26px;
+    }
+    h1 {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #a7f3d0, #38bdf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .species-tag {
+      font-size: 11px;
+      color: #6ee7b7;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+
+    .panel {
+      background: rgba(14, 22, 18, 0.86);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    #controls-panel {
+      bottom: 24px;
+      left: 26px;
+      width: 380px;
+    }
+    #stats-panel {
+      top: 22px;
+      right: 26px;
+      width: 320px;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #a7f3d0;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    .ctrl-group {
+      margin-bottom: 13px;
+    }
+    .ctrl-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 5px;
+    }
+    .ctrl-val {
+      color: #34d399;
+      font-family: monospace;
+      font-weight: 600;
+    }
+    input[type=range] {
+      width: 100%;
+      height: 5px;
+      accent-color: #10b981;
+      background: #1e293b;
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      padding: 10px;
+    }
+    .stat-title {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .stat-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: #34d399;
+      font-family: monospace;
+      margin-top: 2px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      background: rgba(52, 211, 153, 0.14);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: #6ee7b7;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(52, 211, 153, 0.3);
+      color: #fff;
+    }
+    .btn.active {
+      background: #10b981;
+      color: #032117;
+      border-color: #10b981;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <header class="hud">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/>
+      </svg>
+      活體噬電真菌原生體 (可控動態 3D 生物)
+    </h1>
+    <div class="species-tag">TAXON: RADIOMYCES NOOSPHERAVORUS // PURE RHIZOMORPHIC PROTO-THALLUS</div>
+  </header>
+
+  <div id="stats-panel" class="hud panel">
+    <div class="panel-title">活體生理即時監測</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-title">原生質搏動頻率</div>
+        <div class="stat-val" id="st-pulse">1.4 Hz</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">菌索導電電位</div>
+        <div class="stat-val" id="st-volt">385 mV</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">菌絲蔓延半徑</div>
+        <div class="stat-val" id="st-radius">3.4 m</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">吐水液滴分泌量</div>
+        <div class="stat-val" id="st-dew">58 滴</div>
+      </div>
+    </div>
+    <div style="font-size: 11px; color:#94a3b8; line-height: 1.5; margin-top: 12px; border-left: 2px solid #10b981; padding-left: 8px;">
+      純真菌原生形態：絕非蘑菇香菇。具備厚實匍匐菌絲氈、肌肉般搏動的黑色導電菌索（Rhizomorpha），以及隨電磁波柔軟擺動的鹿角狀分生孢子角。
+    </div>
+  </div>
+
+  <div id="controls-panel" class="hud panel">
+    <div class="panel-title">生物動態參數即時控制</div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        <span>電磁刺激頻率 (Stimulus Frequency)</span>
+        <span class="ctrl-val" id="v-freq">45 Hz (生物冷光綠)</span>
+      </div>
+      <input type="range" id="sl-freq" min="5" max="120" step="1" value="45">
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        <span>菌索肌肉搏動流速 (Peristaltic Pumping)</span>
+        <span class="ctrl-val" id="v-pump">中速收縮蠕動 (1.4x)</span>
+      </div>
+      <input type="range" id="sl-pump" min="0.2" max="3.5" step="0.1" value="1.4">
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        <span>菌絲動態生長蔓延 (Mycelial Expansion)</span>
+        <span class="ctrl-val" id="v-growth">旺盛擴展 (85%)</span>
+      </div>
+      <input type="range" id="sl-growth" min="30" max="120" step="1" value="85">
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        <span>鹿角菌角擺動幅度 (Tendril Sway & Breathing)</span>
+        <span class="ctrl-val" id="v-sway">自然柔順起伏 (1.0x)</span>
+      </div>
+      <input type="range" id="sl-sway" min="0.1" max="2.5" step="0.1" value="1.0">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="btn-spore-puff">💥 激發帶電孢子噴發</button>
+      <button class="btn" id="btn-shock">⚡ 發送強電磁脈衝</button>
+    </div>
+  </div>
+
+  <script>
+    // --- 3D Scene Initialization ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0e1411, 0.03);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 4.2, 7.2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.02;
+    controls.minDistance = 2.0;
+    controls.maxDistance = 18;
+    controls.target.set(0, 0.7, 0);
+
+    // --- Lighting: Warm Naturalist Ivory & Biological Glow ---
+    const ambLight = new THREE.AmbientLight(0x0c1a14, 1.8);
+    scene.add(ambLight);
+
+    const keyLight = new THREE.DirectionalLight(0xf5eedc, 1.6);
+    keyLight.position.set(5, 10, 5);
+    scene.add(keyLight);
+
+    const bioLight = new THREE.PointLight(0x34d399, 3.8, 8.0);
+    bioLight.position.set(0, 1.2, 0);
+    scene.add(bioLight);
+
+    // Substrate: Ancient Moist Miocene Basalt Slab
+    const groundGeo = new THREE.CylinderGeometry(5.0, 5.5, 0.4, 48);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: 0x09120e,
+      roughness: 0.95,
+      metalness: 0.1
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.position.y = -0.2;
+    scene.add(ground);
+
+    // --- True Fungal Living Organism (NO Mushrooms, Pure Mycelial Thallus) ---
+    const fungusRoot = new THREE.Group();
+    scene.add(fungusRoot);
+
+    // Materials (Haeckelian Hand-Drawn Velvet Ink Texture Aesthetics)
+    const cordMaterial = new THREE.MeshStandardMaterial({
+      color: 0x141f19,
+      roughness: 0.45,
+      metalness: 0.2,
+      emissive: 0x06281b,
+      emissiveIntensity: 0.6
+    });
+
+    const tendrilMaterial = new THREE.MeshStandardMaterial({
+      color: 0x094833,
+      emissive: 0x059669,
+      emissiveIntensity: 1.0,
+      roughness: 0.35,
+      metalness: 0.15,
+      transparent: true,
+      opacity: 0.95
+    });
+
+    const dewMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x6ee7b7,
+      emissive: 0x10b981,
+      emissiveIntensity: 1.8,
+      roughness: 0.08,
+      transmission: 0.9,
+      ior: 1.34
+    });
+
+    // 1. Central Fleshy Creeping Felt Mat (The Central Thallus Stroma)
+    const stromaGeo = new THREE.CylinderGeometry(1.5, 2.2, 0.28, 36);
+    const sPos = stromaGeo.attributes.position;
+    for (let i = 0; i < sPos.count; i++) {
+      const u = sPos.getX(i);
+      const v = sPos.getY(i);
+      const w = sPos.getZ(i);
+      const angle = Math.atan2(w, u);
+      const wave = Math.sin(angle * 7) * 0.08 + Math.cos(angle * 11) * 0.05;
+      sPos.setY(i, v + wave);
+    }
+    stromaGeo.computeVertexNormals();
+    const stromaMesh = new THREE.Mesh(stromaGeo, cordMaterial);
+    stromaMesh.position.y = 0.08;
+    fungusRoot.add(stromaMesh);
+
+    // 2. Crawling Living Rhizomorph Cords (Dynamic crawling & pulsating tentacles)
+    const NUM_CORDS = 16;
+    const rhizomorphCords = [];
+
+    for (let c = 0; c < NUM_CORDS; c++) {
+      const baseAngle = (c / NUM_CORDS) * Math.PI * 2;
+      const length = 2.4 + Math.random() * 1.6;
+      const numSegments = 16;
+      const points = [];
+
+      for (let s = 0; s <= numSegments; s++) {
+        const t = s / numSegments;
+        const curR = t * length;
+        const wiggle = Math.sin(s * 1.8) * 0.22;
+        const a = baseAngle + wiggle;
+        points.push(new THREE.Vector3(
+          Math.cos(a) * curR,
+          0.04 + Math.sin(t * Math.PI) * 0.08 * (1 - t * 0.5),
+          Math.sin(a) * curR
+        ));
+      }
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.065, 8, false);
+      const tubeMesh = new THREE.Mesh(tubeGeo, cordMaterial);
+      fungusRoot.add(tubeMesh);
+
+      rhizomorphCords.push({
+        mesh: tubeMesh,
+        baseCurve: curve,
+        basePoints: points,
+        angle: baseAngle,
+        length: length,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    // 3. Upright Antler-like Dendritic Tendrils (Swaying Clavarioid Conidiophores)
+    const tendrilCount = 7;
+    const tendrilMeshes = [];
+
+    function makeBranchingTendril(rootX, rootZ, heightScale, angleY) {
+      const group = new THREE.Group();
+      group.position.set(rootX, 0.15, rootZ);
+      group.rotation.y = angleY;
+
+      const mainPts = [
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0.04, heightScale * 0.35, 0.02),
+        new THREE.Vector3(-0.03, heightScale * 0.7, -0.01),
+        new THREE.Vector3(0.02, heightScale, 0)
+      ];
+      const mainCurve = new THREE.CatmullRomCurve3(mainPts);
+      const mainStem = new THREE.Mesh(
+        new THREE.TubeGeometry(mainCurve, 20, 0.065, 8, false),
+        tendrilMaterial
+      );
+      group.add(mainStem);
+
+      // Antler forks
+      const subTendrils = [];
+      for (let f = 0; f < 3; f++) {
+        const forkAngle = (f / 3) * Math.PI * 2;
+        const subPts = [
+          new THREE.Vector3(0.02, heightScale * 0.92, 0),
+          new THREE.Vector3(
+            0.02 + Math.cos(forkAngle) * 0.18,
+            heightScale * 1.38,
+            Math.sin(forkAngle) * 0.18
+          )
+        ];
+        const subCurve = new THREE.CatmullRomCurve3(subPts);
+        const subMesh = new THREE.Mesh(
+          new THREE.TubeGeometry(subCurve, 10, 0.032, 6, false),
+          tendrilMaterial
+        );
+        group.add(subMesh);
+        subTendrils.push(subMesh);
+
+        // Terminal Spore Nodule
+        const nodule = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), dewMaterial);
+        nodule.position.set(
+          0.02 + Math.cos(forkAngle) * 0.18,
+          heightScale * 1.38,
+          Math.sin(forkAngle) * 0.18
+        );
+        group.add(nodule);
+      }
+
+      fungusRoot.add(group);
+      return { group, baseAngle: angleY, height: heightScale, subTendrils };
+    }
+
+    tendrilMeshes.push(makeBranchingTendril(0, 0, 1.35, 0.2));
+    tendrilMeshes.push(makeBranchingTendril(0.42, 0.3, 1.05, 1.2));
+    tendrilMeshes.push(makeBranchingTendril(-0.45, 0.25, 0.95, 2.5));
+    tendrilMeshes.push(makeBranchingTendril(-0.25, -0.5, 1.15, 3.8));
+    tendrilMeshes.push(makeBranchingTendril(0.5, -0.35, 0.85, 4.9));
+    tendrilMeshes.push(makeBranchingTendril(0.15, -0.7, 0.75, 0.8));
+    tendrilMeshes.push(makeBranchingTendril(-0.6, -0.2, 0.8, 2.1));
+
+    // 4. Trembling Guttation Dew Drops (Glandular Ionic Beads)
+    const guttationGroup = new THREE.Group();
+    fungusRoot.add(guttationGroup);
+
+    const guttationBeads = [];
+    const NUM_DEW = 58;
+
+    for (let d = 0; d < NUM_DEW; d++) {
+      const radius = 0.035 + Math.random() * 0.045;
+      const bead = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), dewMaterial);
+      const angle = Math.random() * Math.PI * 2;
+      const r = 0.3 + Math.random() * 1.8;
+      const x = Math.cos(angle) * r;
+      const z = Math.sin(angle) * r;
+      const y = 0.14 + Math.random() * 0.3;
+      bead.position.set(x, y, z);
+      guttationGroup.add(bead);
+
+      guttationBeads.push({
+        mesh: bead,
+        baseY: y,
+        phase: Math.random() * Math.PI * 2,
+        jitter: 0.02 + Math.random() * 0.03
+      });
+    }
+
+    // 5. Living Cytoplasmic Electrical Pulse Particles (Flowing through cords)
+    const NUM_PULSES = 120;
+    const pulseGeo = new THREE.BufferGeometry();
+    const pulsePos = new Float32Array(NUM_PULSES * 3);
+    const pulseT = new Float32Array(NUM_PULSES);
+    const pulseCordIdx = new Int32Array(NUM_PULSES);
+
+    for (let i = 0; i < NUM_PULSES; i++) {
+      pulseT[i] = Math.random();
+      pulseCordIdx[i] = i % NUM_CORDS;
+    }
+    pulseGeo.setAttribute('position', new THREE.BufferAttribute(pulsePos, 3));
+
+    const pulseMat = new THREE.PointsMaterial({
+      color: 0x34d399,
+      size: 0.095,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending
+    });
+    const pulseSystem = new THREE.Points(pulseGeo, pulseMat);
+    fungusRoot.add(pulseSystem);
+
+    // 6. Explosive Spore Cloud (Spore Puff Burst System)
+    const SPORE_COUNT = 300;
+    const sporeGeo = new THREE.BufferGeometry();
+    const sporePositions = new Float32Array(SPORE_COUNT * 3);
+    const sporeVels = [];
+
+    for (let i = 0; i < SPORE_COUNT; i++) {
+      sporePositions[i * 3]     = 0;
+      sporePositions[i * 3 + 1] = 0.3;
+      sporePositions[i * 3 + 2] = 0;
+      sporeVels.push(new THREE.Vector3(
+        (Math.random() - 0.5) * 0.04,
+        0.02 + Math.random() * 0.06,
+        (Math.random() - 0.5) * 0.04
+      ));
+    }
+    sporeGeo.setAttribute('position', new THREE.BufferAttribute(sporePositions, 3));
+
+    const sporeMat = new THREE.PointsMaterial({
+      color: 0x6ee7b7,
+      size: 0.07,
+      transparent: true,
+      opacity: 0.0,
+      blending: THREE.AdditiveBlending
+    });
+    const sporePuffSystem = new THREE.Points(sporeGeo, sporeMat);
+    fungusRoot.add(sporePuffSystem);
+
+    let sporePuffActive = false;
+    let sporePuffTimer = 0.0;
+
+    // --- Interactive Parameter Controls & State ---
+    let emFrequency = 45;       // Hz
+    let pumpSpeed = 1.4;        // contraction wave speed
+    let growthSpan = 0.85;      // mycelial expansion span
+    let swayIntensity = 1.0;    // tendril flexing
+    let shockPulse = 0.0;
+
+    const slFreq = document.getElementById('sl-freq');
+    const slPump = document.getElementById('sl-pump');
+    const slGrowth = document.getElementById('sl-growth');
+    const slSway = document.getElementById('sl-sway');
+    const vFreq = document.getElementById('v-freq');
+    const vPump = document.getElementById('v-pump');
+    const vGrowth = document.getElementById('v-growth');
+    const vSway = document.getElementById('v-sway');
+
+    const stPulse = document.getElementById('st-pulse');
+    const stVolt = document.getElementById('st-volt');
+    const stRadius = document.getElementById('st-radius');
+    const btnSporePuff = document.getElementById('btn-spore-puff');
+    const btnShock = document.getElementById('btn-shock');
+
+    function updateColorsFromFrequency(f) {
+      let colorHex;
+      let label = "";
+
+      if (f < 30) {
+        // Low freq (deep emerald bio-green)
+        colorHex = 0x10b981;
+        label = `${f} Hz (深原生翡翠綠)`;
+      } else if (f < 70) {
+        // Mid freq (electric cyan)
+        colorHex = 0x38bdf8;
+        label = `${f} Hz (電磁共振青藍光)`;
+      } else {
+        // High freq (ultraviolet / electric violet)
+        colorHex = 0xc084fc;
+        label = `${f} Hz (高頻意識流紫光)`;
+      }
+
+      const c = new THREE.Color(colorHex);
+      tendrilMaterial.emissive.copy(c);
+      dewMaterial.emissive.copy(c);
+      pulseMat.color.copy(c);
+      sporeMat.color.copy(c);
+      bioLight.color.copy(c);
+
+      vFreq.textContent = label;
+      vFreq.style.color = '#' + c.getHexString();
+
+      // Telemetry update
+      const volt = Math.round(180 + f * 4.5 + shockPulse * 300);
+      stVolt.textContent = `${volt} mV`;
+      stPulse.textContent = `${(f / 32).toFixed(1)} Hz`;
+    }
+
+    slFreq.oninput = (e) => {
+      emFrequency = parseFloat(e.target.value);
+      updateColorsFromFrequency(emFrequency);
+    };
+
+    slPump.oninput = (e) => {
+      pumpSpeed = parseFloat(e.target.value);
+      vPump.textContent = `${pumpSpeed.toFixed(1)}x (${pumpSpeed > 2.0 ? '急速蠕動' : '自然舒張'})`;
+    };
+
+    slGrowth.oninput = (e) => {
+      growthSpan = parseFloat(e.target.value) / 100;
+      vGrowth.textContent = `${Math.round(growthSpan * 100)}% (動態外展)`;
+      stRadius.textContent = `${(growthSpan * 4.0).toFixed(1)} m`;
+    };
+
+    slSway.oninput = (e) => {
+      swayIntensity = parseFloat(e.target.value);
+      vSway.textContent = `${swayIntensity.toFixed(1)}x`;
+    };
+
+    btnSporePuff.onclick = () => {
+      sporePuffActive = true;
+      sporePuffTimer = 1.0;
+      sporeMat.opacity = 0.95;
+
+      // Reset spore origin to central stroma
+      const pos = sporeGeo.attributes.position.array;
+      for (let i = 0; i < SPORE_COUNT; i++) {
+        pos[i * 3]     = (Math.random() - 0.5) * 0.4;
+        pos[i * 3 + 1] = 0.25;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.4;
+        sporeVels[i].set(
+          (Math.random() - 0.5) * 0.08,
+          0.04 + Math.random() * 0.08,
+          (Math.random() - 0.5) * 0.08
+        );
+      }
+      sporeGeo.attributes.position.needsUpdate = true;
+    };
+
+    btnShock.onclick = () => {
+      shockPulse = 1.0;
+      updateColorsFromFrequency(emFrequency);
+    };
+
+    updateColorsFromFrequency(emFrequency);
+
+    // --- Animation Loop: Dynamic Physical Motions ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+
+      // 1. Biological Respiration of Central Stroma (Pulsing contraction)
+      const respiration = Math.sin(elapsed * 2.2 * pumpSpeed) * 0.035;
+      stromaMesh.scale.set(
+        growthSpan * (1 + respiration * 0.6),
+        1 + respiration * 1.5,
+        growthSpan * (1 + respiration * 0.6)
+      );
+
+      // 2. Peristaltic Travelling Waves on Rhizomorph Cords (Creeping & contraction wave)
+      rhizomorphCords.forEach((cord, idx) => {
+        // Living wave: cords wriggle and stretch dynamically
+        const wave = Math.sin(elapsed * 3.0 * pumpSpeed + cord.phase) * 0.04;
+        cord.mesh.scale.set(
+          growthSpan * (1 + wave),
+          1 + wave * 1.2,
+          growthSpan * (1 + wave)
+        );
+      });
+
+      // 3. Organic Flexing & Swaying of Antler Tendrils (Underwater/Air Currents)
+      tendrilMeshes.forEach((tData, i) => {
+        const swayX = Math.sin(elapsed * 1.8 + i) * 0.06 * swayIntensity;
+        const swayZ = Math.cos(elapsed * 1.5 + i * 2) * 0.06 * swayIntensity;
+        tData.group.rotation.z = swayX;
+        tData.group.rotation.x = swayZ;
+
+        // Sub-fork tips breathing flex
+        tData.subTendrils.forEach((sub, sIdx) => {
+          sub.rotation.z = Math.sin(elapsed * 2.5 + sIdx) * 0.08 * swayIntensity;
+        });
+      });
+
+      // 4. Trembling Guttation Dew Droplets (Vibrating with electric field charge)
+      guttationBeads.forEach(b => {
+        const jitterY = Math.sin(elapsed * 8.0 + b.phase) * b.jitter * (emFrequency / 40);
+        b.mesh.position.y = b.baseY + jitterY;
+      });
+
+      // 5. Cytoplasmic Streaming Particle Transport inside Cords
+      const pArr = pulseGeo.attributes.position.array;
+      for (let i = 0; i < NUM_PULSES; i++) {
+        pulseT[i] += 0.005 * pumpSpeed;
+        if (pulseT[i] > 1.0) pulseT[i] = 0.0;
+
+        const cIdx = pulseCordIdx[i];
+        const cord = rhizomorphCords[cIdx];
+        const pt = cord.baseCurve.getPoint(pulseT[i]);
+
+        pArr[i * 3]     = pt.x * growthSpan;
+        pArr[i * 3 + 1] = pt.y + 0.025;
+        pArr[i * 3 + 2] = pt.z * growthSpan;
+      }
+      pulseGeo.attributes.position.needsUpdate = true;
+
+      // 6. Spore Puff Burst Propagation
+      if (sporePuffActive) {
+        const pos = sporeGeo.attributes.position.array;
+        sporePuffTimer -= 0.012;
+        sporeMat.opacity = Math.max(0, sporePuffTimer);
+
+        for (let i = 0; i < SPORE_COUNT; i++) {
+          pos[i * 3]     += sporeVels[i].x;
+          pos[i * 3 + 1] += sporeVels[i].y;
+          pos[i * 3 + 2] += sporeVels[i].z;
+          sporeVels[i].y *= 0.98; // Drag
+        }
+        sporeGeo.attributes.position.needsUpdate = true;
+
+        if (sporePuffTimer <= 0) {
+          sporePuffActive = false;
+        }
+      }
+
+      // Shock Pulse Decay
+      if (shockPulse > 0.01) {
+        shockPulse *= 0.94;
+        bioLight.intensity = 3.8 + shockPulse * 8.0;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Window Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

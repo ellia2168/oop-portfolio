@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>噬電真菌原生體 (非傘菌／純菌絲網絡形態) | Non-Agaric True Fungus</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020605;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud * { pointer-events: auto; }
+
+    header {
+      top: 24px;
+      left: 28px;
+    }
+    h1 {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #6ee7b7, #38bdf8, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .species-tag {
+      font-size: 11px;
+      color: #34d399;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+
+    .panel {
+      background: rgba(5, 15, 12, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    #controls-panel {
+      bottom: 25px;
+      left: 28px;
+      width: 360px;
+    }
+    #bio-panel {
+      top: 24px;
+      right: 28px;
+      width: 350px;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #6ee7b7;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    .bio-point {
+      margin-bottom: 12px;
+      padding-left: 12px;
+      border-left: 2px solid #10b981;
+    }
+    .bio-point:last-child { margin-bottom: 0; }
+    .bio-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+    .bio-desc {
+      font-size: 11.5px;
+      color: #94a3b8;
+      line-height: 1.55;
+      margin-top: 3px;
+    }
+
+    .control-group {
+      margin-bottom: 14px;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    .control-label span:last-child {
+      color: #34d399;
+      font-family: monospace;
+      font-weight: 600;
+    }
+    input[type=range] {
+      width: 100%;
+      height: 5px;
+      accent-color: #34d399;
+      background: #1e293b;
+      border-radius: 3px;
+      outline: none;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: #6ee7b7;
+      padding: 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(52, 211, 153, 0.28);
+      color: #fff;
+    }
+    .btn.active {
+      background: #10b981;
+      color: #022c22;
+      border-color: #10b981;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <header class="hud">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/>
+      </svg>
+      噬電真菌原生體 (純菌絲體／非蕈類形態)
+    </h1>
+    <div class="species-tag">KINGDOM FUNGI // MYCELIUM RHIZOMORPHA (NON-AGARIC)</div>
+  </header>
+
+  <div id="bio-panel" class="hud panel">
+    <div class="panel-title">純真菌體 (Fungal Thallus) 解剖構造</div>
+
+    <div class="bio-point">
+      <div class="bio-name">1. 匍匐菌絲氈 (Hyphal Velvet Mat)</div>
+      <div class="bio-desc">絕無菌傘與菌柄。真菌主體是由數以億計的微觀菌絲相互交織而成的厚實黑天鵝絨狀有機薄毯，緊密貼附於地表。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">2. 粗壯導電菌索 (Conductive Rhizomorphs)</div>
+      <div class="bio-desc">如植物根系與神經索般的黑色粗管束，貫通整個菌落。管內流動著活體細胞質液，負責傳導電磁感應電位與全人類記憶信號。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">3. 鹿角珊瑚狀分生孢子梗 (Dendritic Conidiophores)</div>
+      <div class="bio-desc">向上延伸的不是香菇，而是如同炭角菌或珊瑚菌般分岔的半透明肉質菌角，頂端掛有晶瑩微小的孢子球群。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">4. 吐水作用離子水滴 (Guttation Droplets)</div>
+      <div class="bio-desc">真菌表面分泌出一顆顆如琥珀與珍珠般的高離子活體水滴，作為天然的介電透鏡，將空氣微弱電磁場聚焦至菌絲內部。</div>
+    </div>
+  </div>
+
+  <div id="controls-panel" class="hud panel">
+    <div class="panel-title">菌絲細胞質電位調節</div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>意識流微波擾動場強 (EM Field)</span>
+        <span id="v-em">中度共振 (細胞質流搏動)</span>
+      </div>
+      <input type="range" id="sl-em" min="10" max="100" step="1" value="65">
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>菌絲覆蓋蔓延範圍 (Mycelial Span)</span>
+        <span id="v-span">直徑 4.5 公尺</span>
+      </div>
+      <input type="range" id="sl-span" min="50" max="100" step="1" value="85">
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>細胞質脈動流速 (Cytoplasmic Stream)</span>
+        <span id="v-flow">1.8 mm/s</span>
+      </div>
+      <input type="range" id="sl-flow" min="1" max="10" step="0.5" value="4">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn active" id="btn-flow">菌索神經電位流</button>
+      <button class="btn active" id="btn-dew">真菌吐水滴 (Guttation)</button>
+      <button class="btn" id="btn-wave">接收意識殘響波</button>
+    </div>
+  </div>
+
+  <script>
+    // --- 3D Scene Initialization ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x020705, 0.035);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 4.0, 6.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.02;
+    controls.minDistance = 2.0;
+    controls.maxDistance = 18;
+    controls.target.set(0, 0.6, 0);
+
+    // --- Lighting: Mysterious, Humid Deep Fungal Cave/Soil Ambiance ---
+    const ambientLight = new THREE.AmbientLight(0x06140e, 1.6);
+    scene.add(ambientLight);
+
+    const overheadLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
+    overheadLight.position.set(2, 8, 3);
+    scene.add(overheadLight);
+
+    const coreGlowLight = new THREE.PointLight(0x34d399, 3.5, 6.0);
+    coreGlowLight.position.set(0, 0.8, 0);
+    scene.add(coreGlowLight);
+
+    // --- Substrate: Ancient Damp Geological Basalt / Humus Rock Slab ---
+    const slabGeo = new THREE.CylinderGeometry(4.8, 5.2, 0.4, 48);
+    const slabMat = new THREE.MeshStandardMaterial({
+      color: 0x050a08,
+      roughness: 0.9,
+      metalness: 0.15
+    });
+    const slab = new THREE.Mesh(slabGeo, slabMat);
+    slab.position.y = -0.2;
+    scene.add(slab);
+
+    // --- Fungal Materials (NO mushrooms: pure hyphae, rhizomorphs, guttation) ---
+    // 1. Dark Bio-melanin Rhizomorph Cord Material
+    const rhizomorphMat = new THREE.MeshStandardMaterial({
+      color: 0x0e1713,
+      roughness: 0.4,
+      metalness: 0.2,
+      emissive: 0x03120b,
+      emissiveIntensity: 0.4
+    });
+
+    // 2. Translucent Glandular Fungal Tendril (Coral-like branching hyphae)
+    const tendrilMat = new THREE.MeshStandardMaterial({
+      color: 0x064e3b,
+      emissive: 0x059669,
+      emissiveIntensity: 0.8,
+      roughness: 0.25,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.92
+    });
+
+    // 3. Glowing Guttation Dew Drops (Ionic condensation water drops)
+    const dewMat = new THREE.MeshPhysicalMaterial({
+      color: 0x6ee7b7,
+      emissive: 0x10b981,
+      emissiveIntensity: 1.5,
+      roughness: 0.1,
+      metalness: 0.1,
+      transmission: 0.85,
+      ior: 1.33
+    });
+
+    // --- Fungal Super-Organism Group ---
+    const fungusGroup = new THREE.Group();
+    scene.add(fungusGroup);
+
+    // 1. Central Fungal Felt Cushion (Central spreading stroma / mycelial mat)
+    const cushionGeo = new THREE.CylinderGeometry(1.4, 2.1, 0.25, 32);
+    // Displace vertices organically
+    const cPos = cushionGeo.attributes.position;
+    for (let i = 0; i < cPos.count; i++) {
+      const u = cPos.getX(i);
+      const v = cPos.getY(i);
+      const w = cPos.getZ(i);
+      const dist = Math.sqrt(u * u + w * w);
+      const noise = Math.sin(u * 5) * 0.06 + Math.cos(w * 5) * 0.06;
+      cPos.setY(i, v + noise);
+    }
+    cushionGeo.computeVertexNormals();
+    const cushion = new THREE.Mesh(cushionGeo, rhizomorphMat);
+    cushion.position.y = 0.08;
+    fungusGroup.add(cushion);
+
+    // 2. Crawling Heavy Rhizomorphic Cords (Thick Root-like Fungal Veins)
+    const cordsCount = 14;
+    const rhizomorphCurves = [];
+
+    for (let i = 0; i < cordsCount; i++) {
+      const angle = (i / cordsCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+      const pts = [];
+      const distMax = 2.8 + Math.random() * 1.5;
+      const steps = 8;
+
+      for (let s = 0; s <= steps; s++) {
+        const t = s / steps;
+        const curDist = t * distMax;
+        const jitterA = angle + (Math.sin(s * 1.5) * 0.25);
+        const y = 0.04 + (Math.sin(t * Math.PI) * 0.08) * (1 - t * 0.5);
+        pts.push(new THREE.Vector3(
+          Math.cos(jitterA) * curDist,
+          y,
+          Math.sin(jitterA) * curDist
+        ));
+      }
+
+      const curve = new THREE.CatmullRomCurve3(pts);
+      rhizomorphCurves.push(curve);
+      const cordGeo = new THREE.TubeGeometry(curve, 24, 0.07 * (1 - 0.5 * (i % 2)), 8, false);
+      const cordMesh = new THREE.Mesh(cordGeo, rhizomorphMat);
+      fungusGroup.add(cordMesh);
+    }
+
+    // 3. Upright Antler / Coral-like Fungal Tendrils (Clavarioid Fungal Projections)
+    // Completely un-mushroom-like: branching fingers, like Xylaria or Clavaria
+    function createFungalTendril(rootX, rootZ, heightScale, angleY) {
+      const g = new THREE.Group();
+      g.position.set(rootX, 0.15, rootZ);
+      g.rotation.y = angleY;
+
+      const mainPts = [
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0.04, heightScale * 0.35, 0.02),
+        new THREE.Vector3(-0.03, heightScale * 0.7, -0.01),
+        new THREE.Vector3(0.02, heightScale, 0)
+      ];
+      const mainStem = new THREE.Mesh(
+        new THREE.TubeGeometry(new THREE.CatmullRomCurve3(mainPts), 18, 0.065, 8, false),
+        tendrilMat
+      );
+      g.add(mainStem);
+
+      // Forked tip branches
+      for (let f = 0; f < 3; f++) {
+        const forkAngle = (f / 3) * Math.PI * 2;
+        const forkPts = [
+          new THREE.Vector3(0.02, heightScale * 0.95, 0),
+          new THREE.Vector3(
+            0.02 + Math.cos(forkAngle) * 0.14,
+            heightScale * 1.35,
+            Math.sin(forkAngle) * 0.14
+          )
+        ];
+        const forkMesh = new THREE.Mesh(
+          new THREE.TubeGeometry(new THREE.CatmullRomCurve3(forkPts), 8, 0.032, 6, false),
+          tendrilMat
+        );
+        g.add(forkMesh);
+
+        // Terminal Spore Nodules (Micro-sporangia cluster)
+        const nodule = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), dewMat);
+        nodule.position.set(
+          0.02 + Math.cos(forkAngle) * 0.14,
+          heightScale * 1.35,
+          Math.sin(forkAngle) * 0.14
+        );
+        g.add(nodule);
+      }
+
+      return g;
+    }
+
+    // Cluster of branching fungal antlers (Xylaria-like)
+    fungusGroup.add(createFungalTendril(0, 0, 1.25, 0.2));
+    fungusGroup.add(createFungalTendril(0.35, 0.25, 0.95, 1.4));
+    fungusGroup.add(createFungalTendril(-0.4, 0.2, 0.85, 2.8));
+    fungusGroup.add(createFungalTendril(-0.2, -0.45, 1.1, 4.2));
+    fungusGroup.add(createFungalTendril(0.45, -0.3, 0.75, 5.1));
+
+    // 4. Guttation Dew Drops (Pearl-like dielectric droplets resting on fungal bodies)
+    const dewDropsGroup = new THREE.Group();
+    fungusGroup.add(dewDropsGroup);
+
+    const dewCount = 45;
+    for (let d = 0; d < dewCount; d++) {
+      const dewMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.04 + Math.random() * 0.045, 12, 12),
+        dewMat
+      );
+      const angle = Math.random() * Math.PI * 2;
+      const r = 0.2 + Math.random() * 1.4;
+      dewMesh.position.set(
+        Math.cos(angle) * r,
+        0.18 + Math.random() * 0.35,
+        Math.sin(angle) * r
+      );
+      dewDropsGroup.add(dewMesh);
+    }
+
+    // 5. Living Cytoplasmic Signal Pulses (Glowing nodes flowing along rhizomorphs)
+    const pulseCount = 70;
+    const pulseGeo = new THREE.BufferGeometry();
+    const pulsePositions = new Float32Array(pulseCount * 3);
+    const pulseT = new Float32Array(pulseCount);
+    const pulseCordIdx = new Int32Array(pulseCount);
+
+    for (let i = 0; i < pulseCount; i++) {
+      pulseT[i] = Math.random();
+      pulseCordIdx[i] = i % cordsCount;
+    }
+    pulseGeo.setAttribute('position', new THREE.BufferAttribute(pulsePositions, 3));
+
+    const pulseMat = new THREE.PointsMaterial({
+      color: 0x34d399,
+      size: 0.09,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending
+    });
+    const pulseParticles = new THREE.Points(pulseGeo, pulseMat);
+    fungusGroup.add(pulseParticles);
+
+    // --- Dynamic Parameters & Interactivity ---
+    let emLevel = 0.65;
+    let flowRate = 4.0;
+    let showFlow = true;
+    let showDew = true;
+    let waveShock = 0.0;
+
+    const slEm = document.getElementById('sl-em');
+    const slSpan = document.getElementById('sl-span');
+    const slFlow = document.getElementById('sl-flow');
+    const vEm = document.getElementById('v-em');
+    const vSpan = document.getElementById('v-span');
+    const vFlow = document.getElementById('v-flow');
+    const btnFlow = document.getElementById('btn-flow');
+    const btnDew = document.getElementById('btn-dew');
+    const btnWave = document.getElementById('btn-wave');
+
+    slEm.oninput = (e) => {
+      emLevel = parseFloat(e.target.value) / 100;
+      if (emLevel < 0.35) {
+        vEm.textContent = "微弱擾動 (低頻電位)";
+      } else if (emLevel < 0.75) {
+        vEm.textContent = "中度共振 (細胞質流搏動)";
+      } else {
+        vEm.textContent = "強電磁充能 (明亮生化冷光)";
+      }
+      updateFungalMetabolism();
+    };
+
+    slSpan.oninput = (e) => {
+      const span = parseFloat(e.target.value) / 100;
+      vSpan.textContent = `直徑 ${(span * 5.2).toFixed(1)} 公尺`;
+      fungusGroup.scale.set(span * 1.1, 1, span * 1.1);
+    };
+
+    slFlow.oninput = (e) => {
+      flowRate = parseFloat(e.target.value);
+      vFlow.textContent = `${(flowRate * 0.45).toFixed(1)} mm/s`;
+    };
+
+    btnFlow.onclick = () => {
+      showFlow = !showFlow;
+      btnFlow.classList.toggle('active', showFlow);
+      pulseParticles.visible = showFlow;
+    };
+
+    btnDew.onclick = () => {
+      showDew = !showDew;
+      btnDew.classList.toggle('active', showDew);
+      dewDropsGroup.visible = showDew;
+    };
+
+    btnWave.onclick = () => {
+      waveShock = 1.0;
+    };
+
+    function updateFungalMetabolism() {
+      const glow = emLevel * 1.8 + waveShock * 3.5;
+      tendrilMat.emissiveIntensity = glow * 0.8;
+      dewMat.emissiveIntensity = glow * 1.6;
+      coreGlowLight.intensity = 2.5 + glow * 2.0;
+    }
+
+    // --- Animation Loop ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+
+      // Slow organic creeping respiration (Non-mushroom pulsing)
+      const respiration = Math.sin(elapsed * 1.4) * 0.03;
+      cushion.scale.set(1 + respiration * 0.5, 1 + respiration, 1 + respiration * 0.5);
+
+      if (waveShock > 0.01) {
+        waveShock *= 0.94;
+        updateFungalMetabolism();
+      }
+
+      // Cytoplasmic streaming particles moving along the rhizomorphic cords
+      if (showFlow) {
+        const pArray = pulseGeo.attributes.position.array;
+        for (let i = 0; i < pulseCount; i++) {
+          pulseT[i] += 0.003 * (flowRate / 3.0);
+          if (pulseT[i] > 1.0) pulseT[i] = 0.0;
+
+          const cIdx = pulseCordIdx[i];
+          const curve = rhizomorphCurves[cIdx];
+          const pt = curve.getPoint(pulseT[i]);
+
+          const idx = i * 3;
+          pArray[idx]     = pt.x;
+          pArray[idx + 1] = pt.y + 0.02;
+          pArray[idx + 2] = pt.z;
+        }
+        pulseGeo.attributes.position.needsUpdate = true;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

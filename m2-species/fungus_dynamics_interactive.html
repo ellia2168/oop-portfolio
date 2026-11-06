@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時空因果迴圈 // 記憶噬電共振真菌 | Chrono-Loop Noosphere Fungus</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020705;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      user-select: none;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud * { pointer-events: auto; }
+
+    header {
+      top: 20px;
+      left: 24px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #a7f3d0, #38bdf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .species-tag {
+      font-size: 11px;
+      color: #34d399;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+
+    .panel {
+      background: rgba(6, 17, 13, 0.85);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      border-radius: 14px;
+      padding: 16px 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+    .panel::-webkit-scrollbar {
+      width: 4px;
+    }
+    .panel::-webkit-scrollbar-thumb {
+      background: rgba(52, 211, 153, 0.35);
+      border-radius: 4px;
+    }
+
+    #controls-panel {
+      bottom: 20px;
+      left: 24px;
+      width: 380px;
+    }
+    #info-panel {
+      top: 20px;
+      right: 24px;
+      width: 340px;
+    }
+
+    .panel-section {
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .panel-section:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #6ee7b7;
+      margin-bottom: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title-text {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .panel-title-text::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .control-group {
+      margin-bottom: 8px;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 3px;
+    }
+    .control-val {
+      font-family: monospace;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      height: 5px;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
+      cursor: pointer;
+      transition: transform 0.15s, background-color 0.15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      background: #6ee7b7;
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+      gap: 6px;
+      margin-top: 5px;
+    }
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      color: #cbd5e1;
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn:hover {
+      background: rgba(52, 211, 153, 0.2);
+      color: #fff;
+      border-color: rgba(52, 211, 153, 0.6);
+    }
+    .btn.active {
+      background: #10b981;
+      color: #022c22;
+      border-color: #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    .stage-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      border-radius: 20px;
+      font-size: 10.5px;
+      color: #a7f3d0;
+      font-weight: 600;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    .bio-point {
+      margin-bottom: 9px;
+      padding-left: 10px;
+      border-left: 2px solid #10b981;
+    }
+    .bio-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #a7f3d0;
+    }
+    .bio-desc {
+      font-size: 10.5px;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin-top: 2px;
+    }
+
+    .timeline-container {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 8px 0 10px 0;
+      padding: 0 2px;
+    }
+    .timeline-node {
+      font-size: 9.5px;
+      color: #64748b;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .timeline-node.active {
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    .timeline-node:hover {
+      color: #6ee7b7;
+    }
+
+    #sound-btn {
+      position: absolute;
+      top: 22px;
+      left: 360px;
+      background: rgba(6, 17, 13, 0.75);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      color: #a7f3d0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <button id="sound-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+    </svg>
+    <span>環境微光聲態: 關</span>
+  </button>
+
+  <header class="hud">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2C6.48 2 2 6.48 2 12c0 3.84 2.16 7.18 5.34 8.87.26-.54.49-1.12.68-1.72C5.64 17.8 4 15.11 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8c0 3.11-1.64 5.8-4.02 7.15.19.6.42 1.18.68 1.72C19.84 19.18 22 15.84 22 12c0-5.52-4.48-10-10-10z"/>
+        <path d="M12 7v10"/>
+        <path d="M9 10c0 3 3 5 3 5s3-2 3-5"/>
+      </svg>
+      擬真真菌動態與生長模擬器
+    </h1>
+    <div class="species-tag">KINGDOM FUNGI // 4D TIME-LAPSE &amp; BIOLOGICAL DYNAMICS</div>
+  </header>
+
+  <!-- Left: Real-time Controls Panel -->
+  <div id="controls-panel" class="hud panel">
+    
+    <!-- Section 1: Growth Time-Lapse -->
+    <div class="panel-section">
+      <div class="panel-title">
+        <div class="panel-title-text">四維縮時生長 (4D Morphing)</div>
+        <div id="status-badge" class="stage-status">
+          <span class="pulse-dot"></span>
+          <span id="txt-stage">開傘噴孢期</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>生長階段進度 (Growth Stage)</span>
+          <span id="v-progress" class="control-val">80%</span>
+        </div>
+        <input type="range" id="sl-progress" min="0" max="100" step="0.5" value="80">
+      </div>
+
+      <div class="timeline-container">
+        <span class="timeline-node" data-target="5">① 原基卵蕾</span>
+        <span class="timeline-node" data-target="30">② 菌柄拔高</span>
+        <span class="timeline-node" data-target="60">③ 菌膜破裂</span>
+        <span class="timeline-node active" data-target="80">④ 膨脹開傘</span>
+        <span class="timeline-node" data-target="100">⑤ 孢子狂湧</span>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>自動生長速率 (Speed)</span>
+          <span id="v-speed" class="control-val">1.0x</span>
+        </div>
+        <input type="range" id="sl-speed" min="0.1" max="3" step="0.1" value="1.0">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn active" id="btn-play">暫停縮時</button>
+        <button class="btn" id="btn-loop">來回循環動態</button>
+        <button class="btn" id="btn-reset">重置原基</button>
+      </div>
+    </div>
+
+    <!-- Section 2: Morphology & Physics -->
+    <div class="panel-section">
+      <div class="panel-title">
+        <div class="panel-title-text">形態學與微分生長 (Morphology)</div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>菌傘外翻開合 (Cap Flaring)</span>
+          <span id="v-flaring" class="control-val">1.10</span>
+        </div>
+        <input type="range" id="sl-flaring" min="0.4" max="1.8" step="0.05" value="1.10">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>邊緣波浪褶皺 (Differential Waviness)</span>
+          <span id="v-wave" class="control-val">0.08</span>
+        </div>
+        <input type="range" id="sl-wave" min="0" max="0.25" step="0.01" value="0.08">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>菌柄曲率與向光性 (Curvature)</span>
+          <span id="v-curve" class="control-val">0.35</span>
+        </div>
+        <input type="range" id="sl-curve" min="0" max="1.0" step="0.05" value="0.35">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>菌落群生模式 (Cluster Density)</span>
+          <span id="v-cluster" class="control-val">雙株伴生</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-single">孤立單株</button>
+          <button class="btn active" id="btn-duo">雙生伴生</button>
+          <button class="btn" id="btn-colony">原生菌落群</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Spores & Micro-dynamics -->
+    <div class="panel-section">
+      <div class="panel-title">
+        <div class="panel-title-text">微觀物理與孢子 (Spores &amp; Field)</div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>孢子噴射釋放量 (Spore Count)</span>
+          <span id="v-spores" class="control-val">1200 粒子</span>
+        </div>
+        <input type="range" id="sl-spores" min="0" max="2500" step="100" value="1200">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>熱微氣流擾動旋渦 (Vortex Drift)</span>
+          <span id="v-wind" class="control-val">1.2</span>
+        </div>
+        <input type="range" id="sl-wind" min="0.2" max="3.0" step="0.1" value="1.2">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>基底活體菌絲蔓延脈動 (Mycelial Pulse)</span>
+          <span id="v-pulse" class="control-val">活躍脈搏</span>
+        </div>
+        <input type="range" id="sl-pulse" min="0.5" max="4.0" step="0.1" value="1.8">
+      </div>
+    </div>
+
+    <!-- Section 4: Species Presets -->
+    <div class="panel-section">
+      <div class="panel-title">
+        <div class="panel-title-text">真菌物種擬真風格 (Species Presets)</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn active" id="preset-mycena">幽冥螢光小菇</button>
+        <button class="btn" id="preset-amanita">毒蠅傘幻境</button>
+        <button class="btn" id="preset-melanin">黑天鵝噬電菌</button>
+        <button class="btn" id="preset-golden">黃金側耳</button>
+        <button class="btn" id="preset-ghost">幽靈白傘</button>
+      </div>
+    </div>
+
+    <!-- Section 5: Bioluminescent Fantasy Cavern Environment -->
+    <div class="panel-section">
+      <div class="panel-title">
+        <div class="panel-title-text">阿凡達奇幻夜光環境 (Bioluminescent Realm)</div>
+      </div>
+      <div class="control-group">
+        <div class="control-label">
+          <span>環境微光強度</span>
+          <span id="v-env-glow">100%</span>
+        </div>
+        <input type="range" id="sl-env-glow" min="0" max="200" step="5" value="100">
+      </div>
+      <div class="control-group">
+        <div class="control-label">
+          <span>浮游精靈光子 (Wisps)</span>
+          <span id="v-wisps">80 隻</span>
+        </div>
+        <input type="range" id="sl-wisps" min="0" max="120" step="5" value="80">
+      </div>
+      <div class="btn-row">
+        <button class="btn active" id="btn-toggle-godrays">林間聖光: 開</button>
+        <button class="btn active" id="btn-toggle-flora">奇幻共生植群: 開</button>
+      </div>
+    </div>
+
+    <!-- Section 6: Camera Controls -->
+    <div>
+      <div class="panel-title">
+        <div class="panel-title-text">微距相機視角 (Macro Camera)</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="cam-wide-env">奇幻全景</button>
+        <button class="btn" id="cam-cinematic">主景縮時</button>
+        <button class="btn" id="cam-gills">蕈褶仰角</button>
+        <button class="btn" id="cam-cap">菌蓋微距</button>
+        <button class="btn" id="cam-mycelium">菌絲底床</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: Biology & Real-time Telemetry -->
+  <div id="info-panel" class="hud panel">
+    <div class="panel-title">
+      <div class="panel-title-text">真菌動態解剖特徵</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">1. 原基膨壓突破 (Turgor Pressure Emergence)</div>
+      <div class="bio-desc">真菌以極高滲透壓（高達數個大氣壓）將水分大量吸入細胞，使小菌蕾（Button）強力突破腐木與菌幕。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">2. 微分生長開傘 (Differential Growth Cap Flaring)</div>
+      <div class="bio-desc">傘蓋邊緣邊緣分生組織裂解速度大於中心，造成傘緣在向外翻張時形成自然的有機波浪起伏與半透明透光感。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">3. 蕈褶伸展與微氣候 (Lamellar Aerodynamics)</div>
+      <div class="bio-desc">蕈傘下方緊密排列如刀片的蕈褶在展開後擴大數十倍產孢面積，真菌蒸散作用在傘下產生上升微氣流帶動孢子飄移。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">4. 菌絲體網絡共振 (Mycelial Network Pulse)</div>
+      <div class="bio-desc">根基遍布的菌絲絨氈並非靜止，內部細胞質持續沿菌絲微管流動，傳遞養分與離子電訊號。</div>
+    </div>
+
+    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>即時菌體高度 (Stipe Height):</span>
+        <span id="tel-height" class="control-val">7.8 cm</span>
+      </div>
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>即時菌蓋直徑 (Cap Diameter):</span>
+        <span id="tel-cap" class="control-val">6.2 cm</span>
+      </div>
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>孢子釋放速率 (Ejection Rate):</span>
+        <span id="tel-spores" class="control-val">420/s</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- THREE.JS SCENE SETUP ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x020a08, 0.024);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 120);
+    camera.position.set(0, 3.2, 5.8);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.04;
+    controls.minDistance = 1.5;
+    controls.maxDistance = 24;
+    controls.target.set(0, 1.3, 0);
+
+    // --- LIGHTING SETUP ---
+    const ambientLight = new THREE.AmbientLight(0x06140e, 1.5);
+    scene.add(ambientLight);
+
+    const overheadLight = new THREE.DirectionalLight(0x80e8ff, 1.8);
+    overheadLight.position.set(3, 8, 4);
+    overheadLight.castShadow = true;
+    overheadLight.shadow.mapSize.width = 1024;
+    overheadLight.shadow.mapSize.height = 1024;
+    overheadLight.shadow.bias = -0.001;
+    scene.add(overheadLight);
+
+    const rimLight = new THREE.DirectionalLight(0x34d399, 1.6);
+    rimLight.position.set(-4, 2, -4);
+    scene.add(rimLight);
+
+    const clusterGlowLight = new THREE.PointLight(0x34d399, 3.8, 6.0);
+    clusterGlowLight.position.set(0, 1.2, 0);
+    scene.add(clusterGlowLight);
+
+    // --- SUBSTRATE (Forest Soil & Ancient Wet Bark) ---
+    const slabGeo = new THREE.CylinderGeometry(4.6, 5.0, 0.45, 64);
+    const slabMat = new THREE.MeshStandardMaterial({
+      color: 0x08100c,
+      roughness: 0.95,
+      metalness: 0.1
+    });
+    const slab = new THREE.Mesh(slabGeo, slabMat);
+    slab.position.y = -0.22;
+    slab.receiveShadow = true;
+    scene.add(slab);
+
+    const terrainGeo = new THREE.RingGeometry(0.2, 4.4, 48, 16);
+    terrainGeo.rotateX(-Math.PI / 2);
+    const tPos = terrainGeo.attributes.position;
+    for (let i = 0; i < tPos.count; i++) {
+      const x = tPos.getX(i);
+      const z = tPos.getZ(i);
+      const dist = Math.sqrt(x*x + z*z);
+      const bump = Math.sin(x * 3.5) * Math.cos(z * 3.2) * 0.08 + Math.sin(dist * 5) * 0.04;
+      tPos.setY(i, bump);
+    }
+    terrainGeo.computeVertexNormals();
+    const terrainMat = new THREE.MeshStandardMaterial({
+      color: 0x060d0a,
+      roughness: 0.98,
+      metalness: 0.05
+    });
+    const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+    terrain.position.y = 0.01;
+    scene.add(terrain);
+
+    // =========================================================================
+    // --- BIOLUMINESCENT FANTASY REALM (AVATAR DEEP FOREST & CAVERN) ---
+    // =========================================================================
+
+    // 1. BIOLUMINESCENT SKY DOME & CAVERN VAULT
+    const domeGeo = new THREE.SphereGeometry(75, 32, 24);
+    const domeMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      uniforms: {
+        time: { value: 0 },
+        topColor: { value: new THREE.Color(0x01080e) },      // 深淵穹頂
+        midColor: { value: new THREE.Color(0x052a22) },      // 林間夜光青藍微光
+        bottomColor: { value: new THREE.Color(0x020c08) },   // 地表林霧
+        glowStrength: { value: 1.0 }
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPos.xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 midColor;
+        uniform vec3 bottomColor;
+        uniform float glowStrength;
+        uniform float time;
+        varying vec3 vWorldPosition;
+        varying vec2 vUv;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        void main() {
+          float h = normalize(vWorldPosition).y;
+          vec3 col = bottomColor;
+          if (h > 0.0) {
+            float mixMid = smoothstep(0.0, 0.45, h);
+            float mixTop = smoothstep(0.35, 0.92, h);
+            col = mix(bottomColor, midColor * glowStrength, mixMid);
+            col = mix(col, topColor, mixTop);
+          } else {
+            col = mix(bottomColor, vec3(0.01, 0.03, 0.02), -h);
+          }
+
+          // 穹頂深處遠景閃爍微光孢子 / 奇幻星點
+          if (h > 0.15) {
+            vec2 starGrid = floor(vUv * 240.0);
+            float rnd = hash(starGrid);
+            if (rnd > 0.985) {
+              float twinkle = sin(time * 2.2 + rnd * 6.28) * 0.5 + 0.5;
+              col += vec3(0.4, 0.95, 0.75) * twinkle * 0.65 * glowStrength * (h - 0.15);
+            }
+          }
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+    const skyDome = new THREE.Mesh(domeGeo, domeMat);
+    scene.add(skyDome);
+
+    // 2. EXTENDED ORGANIC CAVERN / FOREST FLOOR
+    const outerFloorGeo = new THREE.RingGeometry(4.3, 38, 56, 20);
+    outerFloorGeo.rotateX(-Math.PI / 2);
+    const ofPos = outerFloorGeo.attributes.position;
+    for (let i = 0; i < ofPos.count; i++) {
+      const x = ofPos.getX(i);
+      const z = ofPos.getZ(i);
+      const r = Math.sqrt(x * x + z * z);
+      const noise = Math.sin(x * 0.32) * Math.cos(z * 0.35) * 0.42
+                  + Math.sin(x * 0.82 + z * 0.55) * 0.18
+                  + Math.sin(r * 0.45) * 0.12;
+      const blend = Math.min(1.0, Math.max(0.0, (r - 4.4) / 3.0));
+      ofPos.setY(i, -0.22 + noise * blend);
+    }
+    outerFloorGeo.computeVertexNormals();
+
+    const outerFloorMat = new THREE.MeshStandardMaterial({
+      color: 0x05120c,
+      roughness: 0.90,
+      metalness: 0.08
+    });
+    const outerFloor = new THREE.Mesh(outerFloorGeo, outerFloorMat);
+    outerFloor.receiveShadow = true;
+    scene.add(outerFloor);
+
+    // 3. ANCIENT TOWERING TREES WITH BIOLUMINESCENT VINES
+    const treesGroup = new THREE.Group();
+    scene.add(treesGroup);
+
+    const treeVinesList = [];
+    const TREE_COUNT = 9;
+    const treeAngles = [0.25, 0.92, 1.65, 2.38, 3.2, 3.9, 4.65, 5.35, 5.95];
+    const treeDists = [10.5, 13.2, 11.0, 14.5, 12.0, 11.5, 13.8, 10.8, 12.5];
+    const treeHeights = [11, 14, 12, 15, 13, 11, 14, 12, 13];
+
+    treeAngles.forEach((angle, idx) => {
+      const dist = treeDists[idx];
+      const tx = Math.cos(angle) * dist;
+      const tz = Math.sin(angle) * dist;
+      const th = treeHeights[idx];
+
+      // Gnarled Tree Trunk
+      const trunkGeo = new THREE.CylinderGeometry(0.55 + Math.random() * 0.25, 1.35 + Math.random() * 0.4, th, 14, 8);
+      const trkPos = trunkGeo.attributes.position;
+      for (let i = 0; i < trkPos.count; i++) {
+        const y = trkPos.getY(i);
+        const curve = Math.sin(y * 0.35 + idx) * 0.35;
+        trkPos.setX(i, trkPos.getX(i) + curve);
+      }
+      trunkGeo.computeVertexNormals();
+
+      const trunkMat = new THREE.MeshStandardMaterial({
+        color: 0x07110c,
+        roughness: 0.95,
+        metalness: 0.05
+      });
+      const trunkMesh = new THREE.Mesh(trunkGeo, trunkMat);
+      trunkMesh.position.set(tx, th * 0.48 - 0.2, tz);
+      trunkMesh.rotation.y = Math.random() * Math.PI * 2;
+      trunkMesh.rotation.z = (Math.random() - 0.5) * 0.12;
+      trunkMesh.castShadow = true;
+      trunkMesh.receiveShadow = true;
+      treesGroup.add(trunkMesh);
+
+      // Bioluminescent Spiral Vines crawling on the trunk
+      const vinePts = [];
+      const vineRev = 3.2 + Math.random() * 1.5;
+      const vineSegs = 36;
+      for (let s = 0; s <= vineSegs; s++) {
+        const t = s / vineSegs;
+        const vY = (t - 0.5) * th * 0.85;
+        const vR = (1.1 - t * 0.55) * 1.15;
+        const vA = t * Math.PI * 2 * vineRev + idx;
+        vinePts.push(new THREE.Vector3(Math.cos(vA) * vR, vY, Math.sin(vA) * vR));
+      }
+      const vineCurve = new THREE.CatmullRomCurve3(vinePts);
+      const vineGeo = new THREE.TubeGeometry(vineCurve, 30, 0.045, 6, false);
+      const vineHue = (idx % 2 === 0) ? 0x06b6d4 : 0x10b981; // 青色與翠綠色夜光
+      const vineMat = new THREE.MeshStandardMaterial({
+        color: 0x022c22,
+        emissive: vineHue,
+        emissiveIntensity: 0.75,
+        roughness: 0.3
+      });
+      const vineMesh = new THREE.Mesh(vineGeo, vineMat);
+      vineMesh.position.copy(trunkMesh.position);
+      vineMesh.rotation.copy(trunkMesh.rotation);
+      treesGroup.add(vineMesh);
+      treeVinesList.push({ mat: vineMat, baseIntensity: 0.75, phase: idx * 0.8 });
+
+      // Shelf Fungi Brackets on trunk
+      const bracketGeo = new THREE.SphereGeometry(0.35 + Math.random() * 0.2, 10, 8, 0, Math.PI);
+      bracketGeo.scale(1.2, 0.25, 0.9);
+      const bracketMat = new THREE.MeshStandardMaterial({
+        color: 0x042f2e,
+        emissive: (idx % 3 === 0) ? 0x38bdf8 : ((idx % 3 === 1) ? 0x34d399 : 0xc084fc),
+        emissiveIntensity: 0.9,
+        roughness: 0.35
+      });
+      const bracketMesh = new THREE.Mesh(bracketGeo, bracketMat);
+      bracketMesh.position.set(tx + (Math.random() - 0.5) * 0.6, 1.2 + Math.random() * 3.5, tz + (Math.random() - 0.5) * 0.6);
+      bracketMesh.rotation.x = Math.PI / 2 + (Math.random() - 0.5) * 0.3;
+      bracketMesh.rotation.y = angle + Math.PI;
+      treesGroup.add(bracketMesh);
+    });
+
+    // 4. COMPANION BIOLUMINESCENT FLORA & MOSS MOUNDS
+    const floraGroup = new THREE.Group();
+    scene.add(floraGroup);
+
+    const companionFungiMats = [];
+    const COMPANION_COUNT = 24;
+
+    for (let i = 0; i < COMPANION_COUNT; i++) {
+      const fAngle = (i / COMPANION_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+      const fDist = 3.6 + Math.random() * 4.8;
+      const fx = Math.cos(fAngle) * fDist;
+      const fz = Math.sin(fAngle) * fDist;
+
+      const fStemH = 0.45 + Math.random() * 0.65;
+      const fStemGeo = new THREE.CylinderGeometry(0.02, 0.045, fStemH, 8);
+      const fStemMat = new THREE.MeshStandardMaterial({
+        color: 0x064e3b,
+        emissive: 0x047857,
+        emissiveIntensity: 0.4,
+        roughness: 0.4
+      });
+      const fStem = new THREE.Mesh(fStemGeo, fStemMat);
+      fStem.position.set(fx, fStemH * 0.5 - 0.1, fz);
+      fStem.rotation.x = (Math.random() - 0.5) * 0.3;
+      fStem.rotation.z = (Math.random() - 0.5) * 0.3;
+      floraGroup.add(fStem);
+
+      const capType = i % 3;
+      const capColor = capType === 0 ? 0x06b6d4 : (capType === 1 ? 0x10b981 : 0xa855f7);
+      const fCapGeo = new THREE.ConeGeometry(0.12 + Math.random() * 0.08, 0.22, 12);
+      const fCapMat = new THREE.MeshStandardMaterial({
+        color: 0x022c22,
+        emissive: capColor,
+        emissiveIntensity: 0.85,
+        roughness: 0.3
+      });
+      const fCap = new THREE.Mesh(fCapGeo, fCapMat);
+      fCap.position.set(fx, fStemH - 0.05, fz);
+      fCap.rotation.copy(fStem.rotation);
+      floraGroup.add(fCap);
+
+      companionFungiMats.push({ mat: fCapMat, baseIntensity: 0.85, phase: Math.random() * Math.PI * 2 });
+    }
+
+    // Mossy organic boulders
+    for (let r = 0; r < 14; r++) {
+      const rAngle = Math.random() * Math.PI * 2;
+      const rDist = 4.8 + Math.random() * 6.5;
+      const rx = Math.cos(rAngle) * rDist;
+      const rz = Math.sin(rAngle) * rDist;
+      const rockGeo = new THREE.DodecahedronGeometry(0.4 + Math.random() * 0.55, 1);
+      const rockMat = new THREE.MeshStandardMaterial({
+        color: 0x07150f,
+        roughness: 0.95,
+        metalness: 0.05
+      });
+      const rock = new THREE.Mesh(rockGeo, rockMat);
+      rock.position.set(rx, 0.1, rz);
+      rock.rotation.set(Math.random(), Math.random(), Math.random());
+      rock.scale.set(1 + Math.random() * 0.4, 0.6 + Math.random() * 0.3, 1 + Math.random() * 0.5);
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      floraGroup.add(rock);
+    }
+
+    // 5. AVATAR WILL-O'-THE-WISPS (靈動浮游精靈光子)
+    const MAX_WISPS = 120;
+    const wispGeo = new THREE.BufferGeometry();
+    const wispPositions = new Float32Array(MAX_WISPS * 3);
+    const wispData = [];
+
+    function createWispTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.2, 'rgba(125, 248, 209, 0.95)');
+      grad.addColorStop(0.5, 'rgba(34, 211, 238, 0.4)');
+      grad.addColorStop(0.85, 'rgba(168, 85, 247, 0.1)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    for (let i = 0; i < MAX_WISPS; i++) {
+      const baseR = 1.8 + Math.random() * 9.5;
+      const baseAngle = Math.random() * Math.PI * 2;
+      const baseY = 0.4 + Math.random() * 4.8;
+      
+      wispPositions[i * 3 + 0] = Math.cos(baseAngle) * baseR;
+      wispPositions[i * 3 + 1] = baseY;
+      wispPositions[i * 3 + 2] = Math.sin(baseAngle) * baseR;
+
+      wispData.push({
+        baseR,
+        baseAngle,
+        baseY,
+        speedA: (Math.random() - 0.5) * 0.25,
+        speedY: 0.3 + Math.random() * 0.5,
+        phase: Math.random() * Math.PI * 2,
+        bobAmp: 0.25 + Math.random() * 0.45
+      });
+    }
+
+    wispGeo.setAttribute('position', new THREE.BufferAttribute(wispPositions, 3));
+    const wispMat = new THREE.PointsMaterial({
+      color: 0x86efac,
+      size: 0.32,
+      map: createWispTexture(),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.95
+    });
+    const wispPoints = new THREE.Points(wispGeo, wispMat);
+    scene.add(wispPoints);
+
+    // 6. ETHEREAL VOLUMETRIC GOD RAYS (林間聖光光柱)
+    const godRaysGroup = new THREE.Group();
+    scene.add(godRaysGroup);
+
+    const rayConeGeo = new THREE.ConeGeometry(2.4, 15, 24, 1, true);
+    rayConeGeo.translate(0, -7.5, 0);
+
+    const godRayMat = new THREE.MeshBasicMaterial({
+      color: 0x5eead4,
+      transparent: true,
+      opacity: 0.12,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    const ray1 = new THREE.Mesh(rayConeGeo, godRayMat);
+    ray1.position.set(2.5, 11, 2.5);
+    ray1.rotation.set(-0.25, 0, 0.28);
+    godRaysGroup.add(ray1);
+
+    const ray2 = new THREE.Mesh(rayConeGeo, godRayMat);
+    ray2.position.set(-3.2, 12, -2.0);
+    ray2.rotation.set(0.22, 0, -0.32);
+    ray2.scale.set(0.85, 0.9, 0.85);
+    godRaysGroup.add(ray2);
+
+    // --- PROCEDURAL MYCELIUM NETWORK (Spreading on ground) ---
+    const myceliumGroup = new THREE.Group();
+    scene.add(myceliumGroup);
+
+    const myceliumLines = [];
+    const MYCELIUM_BRANCHES = 38;
+    for (let b = 0; b < MYCELIUM_BRANCHES; b++) {
+      const pts = [];
+      const baseAngle = (b / MYCELIUM_BRANCHES) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+      let r = 0.2 + Math.random() * 0.1;
+      let angle = baseAngle;
+      const numSegments = 14 + Math.floor(Math.random() * 10);
+      
+      for (let s = 0; s < numSegments; s++) {
+        r += 0.08 + Math.random() * 0.06;
+        angle += (Math.random() - 0.5) * 0.25;
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+        const y = 0.02 + Math.random() * 0.015;
+        pts.push(new THREE.Vector3(x, y, z));
+      }
+      
+      const curve = new THREE.CatmullRomCurve3(pts);
+      const branchGeo = new THREE.TubeGeometry(curve, numSegments * 2, 0.022 * (1.0 - (b%3)*0.2), 6, false);
+      const branchMat = new THREE.MeshStandardMaterial({
+        color: 0x103628,
+        emissive: 0x059669,
+        emissiveIntensity: 0.5,
+        roughness: 0.4
+      });
+      const branchMesh = new THREE.Mesh(branchGeo, branchMat);
+      myceliumGroup.add(branchMesh);
+      myceliumLines.push({ mesh: branchMesh, mat: branchMat, baseEmissive: 0.5, offset: Math.random() * Math.PI * 2 });
+    }
+
+    // --- SPORE PARTICLE SYSTEM ---
+    const MAX_SPORES = 2500;
+    const sporeGeo = new THREE.BufferGeometry();
+    const sporePositions = new Float32Array(MAX_SPORES * 3);
+    const sporeVelocities = [];
+    const sporeLifetimes = new Float32Array(MAX_SPORES);
+    const sporeMaxLives = new Float32Array(MAX_SPORES);
+
+    function createSporeTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.25, 'rgba(110, 231, 183, 0.85)');
+      grad.addColorStop(0.6, 'rgba(16, 185, 129, 0.25)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    for (let i = 0; i < MAX_SPORES; i++) {
+      sporePositions[i * 3 + 0] = (Math.random() - 0.5) * 1.5;
+      sporePositions[i * 3 + 1] = 0.5 + Math.random() * 2.5;
+      sporePositions[i * 3 + 2] = (Math.random() - 0.5) * 1.5;
+      sporeVelocities.push(new THREE.Vector3(
+        (Math.random() - 0.5) * 0.015,
+        0.012 + Math.random() * 0.02,
+        (Math.random() - 0.5) * 0.015
+      ));
+      sporeLifetimes[i] = Math.random() * 100;
+      sporeMaxLives[i] = 80 + Math.random() * 60;
+    }
+
+    sporeGeo.setAttribute('position', new THREE.BufferAttribute(sporePositions, 3));
+    const sporeMat = new THREE.PointsMaterial({
+      color: 0xa7f3d0,
+      size: 0.12,
+      map: createSporeTexture(),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.85
+    });
+    const sporePoints = new THREE.Points(sporeGeo, sporeMat);
+    scene.add(sporePoints);
+
+    // --- SPECIES PRESETS DEFINITIONS ---
+    const SPECIES_PRESETS = {
+      mycena: {
+        name: "幽冥螢光小菇 (Bioluminescent Mycena)",
+        capColor: 0x064e3b,
+        capEmissive: 0x10b981,
+        capEmissiveIntensity: 0.85,
+        stipeColor: 0xd1fae5,
+        stipeEmissive: 0x059669,
+        stipeEmissiveIntensity: 0.45,
+        gillColor: 0xa7f3d0,
+        gillEmissive: 0x34d399,
+        sporeColor: 0x6ee7b7,
+        lightColor: 0x34d399,
+        roughness: 0.35
+      },
+      amanita: {
+        name: "毒蠅傘幻境 (Amanita Muscaria)",
+        capColor: 0xcc1414,
+        capEmissive: 0x590404,
+        capEmissiveIntensity: 0.3,
+        stipeColor: 0xf8fafc,
+        stipeEmissive: 0x94a3b8,
+        stipeEmissiveIntensity: 0.1,
+        gillColor: 0xffffff,
+        gillEmissive: 0xcccccc,
+        sporeColor: 0xffffff,
+        lightColor: 0xff6b6b,
+        roughness: 0.45
+      },
+      melanin: {
+        name: "黑天鵝噬電菌 (Melanin Radiotrophic)",
+        capColor: 0x0d1412,
+        capEmissive: 0x38bdf8,
+        capEmissiveIntensity: 0.6,
+        stipeColor: 0x1e293b,
+        stipeEmissive: 0x6366f1,
+        stipeEmissiveIntensity: 0.4,
+        gillColor: 0x38bdf8,
+        gillEmissive: 0x0284c7,
+        sporeColor: 0x38bdf8,
+        lightColor: 0x38bdf8,
+        roughness: 0.25
+      },
+      golden: {
+        name: "黃金側耳 (Golden Oyster)",
+        capColor: 0xd97706,
+        capEmissive: 0xf59e0b,
+        capEmissiveIntensity: 0.55,
+        stipeColor: 0xfef3c7,
+        stipeEmissive: 0xfbbf24,
+        stipeEmissiveIntensity: 0.3,
+        gillColor: 0xfde68a,
+        gillEmissive: 0xf59e0b,
+        sporeColor: 0xfde047,
+        lightColor: 0xf59e0b,
+        roughness: 0.4
+      },
+      ghost: {
+        name: "幽靈白傘 (Ghost Destroying Angel)",
+        capColor: 0xf1f5f9,
+        capEmissive: 0x93c5fd,
+        capEmissiveIntensity: 0.35,
+        stipeColor: 0xe2e8f0,
+        stipeEmissive: 0x60a5fa,
+        stipeEmissiveIntensity: 0.2,
+        gillColor: 0xffffff,
+        gillEmissive: 0xbfdbfe,
+        sporeColor: 0xdbeafe,
+        lightColor: 0x93c5fd,
+        roughness: 0.28
+      }
+    };
+
+    let activePreset = SPECIES_PRESETS.mycena;
+
+    // --- HIGH-PERFORMANCE PARAMETRIC MUSHROOM CLASS ---
+    // Uses preallocated BufferGeometries mutated in-place for silky 60/120 FPS
+    class DynamicMushroom {
+      constructor(scene, options = {}) {
+        this.scene = scene;
+        this.group = new THREE.Group();
+        this.scene.add(this.group);
+
+        this.offsetX = options.x || 0;
+        this.offsetZ = options.z || 0;
+        this.scaleMultiplier = options.scale || 1.0;
+        this.phaseShift = options.phaseShift || 0;
+        this.curveDirection = options.curveDir || 0;
+
+        this.group.position.set(this.offsetX, 0, this.offsetZ);
+
+        // Materials
+        this.capMat = new THREE.MeshStandardMaterial({
+          color: activePreset.capColor,
+          emissive: activePreset.capEmissive,
+          emissiveIntensity: activePreset.capEmissiveIntensity,
+          roughness: activePreset.roughness,
+          metalness: 0.15,
+          side: THREE.DoubleSide
+        });
+
+        this.stipeMat = new THREE.MeshStandardMaterial({
+          color: activePreset.stipeColor,
+          emissive: activePreset.stipeEmissive,
+          emissiveIntensity: activePreset.stipeEmissiveIntensity,
+          roughness: 0.7,
+          metalness: 0.05
+        });
+
+        this.gillsMat = new THREE.MeshStandardMaterial({
+          color: activePreset.gillColor,
+          emissive: activePreset.gillEmissive,
+          emissiveIntensity: 1.5,
+          roughness: 0.3,
+          side: THREE.DoubleSide
+        });
+
+        this.veilMat = new THREE.MeshStandardMaterial({
+          color: activePreset.stipeColor,
+          roughness: 0.9,
+          transparent: true,
+          opacity: 0.8
+        });
+
+        // 1. CAP GEOMETRY (Fixed Grid Rings x Segments)
+        this.capRings = 24;
+        this.capSegments = 48;
+        this.capGeo = new THREE.BufferGeometry();
+        const capVertCount = (this.capRings + 1) * (this.capSegments + 1);
+        const capPositions = new Float32Array(capVertCount * 3);
+        const capUVs = new Float32Array(capVertCount * 2);
+        const capIndices = [];
+
+        for (let r = 0; r <= this.capRings; r++) {
+          const v = r / this.capRings;
+          for (let s = 0; s <= this.capSegments; s++) {
+            const u = s / this.capSegments;
+            const idx = r * (this.capSegments + 1) + s;
+            capUVs[idx * 2 + 0] = u;
+            capUVs[idx * 2 + 1] = v;
+          }
+        }
+
+        for (let r = 0; r < this.capRings; r++) {
+          for (let s = 0; s < this.capSegments; s++) {
+            const a = r * (this.capSegments + 1) + s;
+            const b = (r + 1) * (this.capSegments + 1) + s;
+            const c = (r + 1) * (this.capSegments + 1) + (s + 1);
+            const d = r * (this.capSegments + 1) + (s + 1);
+            capIndices.push(a, b, d);
+            capIndices.push(b, c, d);
+          }
+        }
+
+        this.capGeo.setIndex(capIndices);
+        this.capGeo.setAttribute('position', new THREE.BufferAttribute(capPositions, 3));
+        this.capGeo.setAttribute('uv', new THREE.BufferAttribute(capUVs, 2));
+        this.capMesh = new THREE.Mesh(this.capGeo, this.capMat);
+        this.capMesh.castShadow = true;
+        this.group.add(this.capMesh);
+
+        // 2. STIPE GEOMETRY (Fixed Height Rings x Radial Segments)
+        this.stipeRings = 20;
+        this.stipeSegments = 16;
+        this.stipeGeo = new THREE.BufferGeometry();
+        const stipeVertCount = (this.stipeRings + 1) * (this.stipeSegments + 1);
+        const stipePositions = new Float32Array(stipeVertCount * 3);
+        const stipeIndices = [];
+
+        for (let r = 0; r < this.stipeRings; r++) {
+          for (let s = 0; s < this.stipeSegments; s++) {
+            const a = r * (this.stipeSegments + 1) + s;
+            const b = (r + 1) * (this.stipeSegments + 1) + s;
+            const c = (r + 1) * (this.stipeSegments + 1) + (s + 1);
+            const d = r * (this.stipeSegments + 1) + (s + 1);
+            stipeIndices.push(a, b, d);
+            stipeIndices.push(b, c, d);
+          }
+        }
+        this.stipeGeo.setIndex(stipeIndices);
+        this.stipeGeo.setAttribute('position', new THREE.BufferAttribute(stipePositions, 3));
+        this.stipeMesh = new THREE.Mesh(this.stipeGeo, this.stipeMat);
+        this.stipeMesh.castShadow = true;
+        this.stipeMesh.receiveShadow = true;
+        this.group.add(this.stipeMesh);
+
+        // 3. VEIL COLLAR
+        const vGeo = new THREE.TorusGeometry(0.18, 0.035, 8, 20);
+        vGeo.rotateX(Math.PI / 2);
+        this.veilMesh = new THREE.Mesh(vGeo, this.veilMat);
+        this.group.add(this.veilMesh);
+
+        // 4. GILLS (Reused array of thin plane fins)
+        this.NUM_GILLS = 36;
+        this.gillsGroup = new THREE.Group();
+        this.group.add(this.gillsGroup);
+        this.gillMeshes = [];
+
+        for (let k = 0; k < this.NUM_GILLS; k++) {
+          const gGeo = new THREE.PlaneGeometry(1, 1);
+          gGeo.translate(0.5, -0.5, 0); // Origin at top-inner corner
+          const angle = (k / this.NUM_GILLS) * Math.PI * 2;
+          gGeo.rotateY(angle);
+
+          const gMesh = new THREE.Mesh(gGeo, this.gillsMat);
+          this.gillsGroup.add(gMesh);
+          this.gillMeshes.push(gMesh);
+        }
+
+        // 5. GUTTATION DROPLETS (Moist dewdrops on cap)
+        this.dropsGroup = new THREE.Group();
+        this.group.add(this.dropsGroup);
+        this.dropMeshes = [];
+        const dropMat = new THREE.MeshPhysicalMaterial({
+          color: 0xffffff,
+          roughness: 0.05,
+          transmission: 0.9,
+          thickness: 0.5,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.1
+        });
+        for (let d = 0; d < 6; d++) {
+          const dGeo = new THREE.SphereGeometry(0.045, 12, 12);
+          const dMesh = new THREE.Mesh(dGeo, dropMat);
+          this.dropsGroup.add(dMesh);
+          this.dropMeshes.push({
+            mesh: dMesh,
+            relU: 0.35 + Math.random() * 0.45,
+            relAngle: Math.random() * Math.PI * 2
+          });
+        }
+
+        this.lastCapApexY = 0.5;
+        this.lastCapRadius = 0.5;
+      }
+
+      applyPreset(p) {
+        this.capMat.color.setHex(p.capColor);
+        this.capMat.emissive.setHex(p.capEmissive);
+        this.capMat.emissiveIntensity = p.capEmissiveIntensity;
+        this.capMat.roughness = p.roughness;
+
+        this.stipeMat.color.setHex(p.stipeColor);
+        this.stipeMat.emissive.setHex(p.stipeEmissive);
+        this.stipeMat.emissiveIntensity = p.stipeEmissiveIntensity;
+
+        this.gillsMat.color.setHex(p.gillColor);
+        this.gillsMat.emissive.setHex(p.gillEmissive);
+
+        this.veilMat.color.setHex(p.stipeColor);
+      }
+
+      update(globalGrowth, params) {
+        // Effective growth calculation
+        const g = Math.max(0.01, Math.min(1.0, (globalGrowth - this.phaseShift) / (1.0 - this.phaseShift * 0.6)));
+
+        const baseHeight = (0.25 + 2.2 * Math.pow(g, 0.85)) * this.scaleMultiplier;
+        const capOpening = params.flaring;
+        const waviness = params.waviness;
+        const stemCurve = params.curvature;
+
+        // --- 1. UPDATE STIPE VERTICES IN-PLACE ---
+        const sPos = this.stipeGeo.attributes.position.array;
+        const swayAmp = 0.25 * stemCurve * this.scaleMultiplier;
+        const curveDir = this.curveDirection;
+        const stemRadius = (0.16 - 0.05 * g) * this.scaleMultiplier;
+
+        let apexX = 0, apexY = baseHeight, apexZ = 0;
+
+        for (let r = 0; r <= this.stipeRings; r++) {
+          const t = r / this.stipeRings;
+          const y = t * baseHeight;
+          const sway = Math.sin(t * Math.PI) * swayAmp;
+          const cx = Math.cos(curveDir) * sway;
+          const cz = Math.sin(curveDir) * sway;
+
+          if (r === this.stipeRings) {
+            apexX = cx; apexY = y; apexZ = cz;
+          }
+
+          // Stem taper: thicker at ground base
+          const rCur = stemRadius * (1.25 - 0.45 * t);
+
+          for (let s = 0; s <= this.stipeSegments; s++) {
+            const angle = (s / this.stipeSegments) * Math.PI * 2;
+            const idx = (r * (this.stipeSegments + 1) + s) * 3;
+            sPos[idx + 0] = cx + Math.cos(angle) * rCur;
+            sPos[idx + 1] = y;
+            sPos[idx + 2] = cz + Math.sin(angle) * rCur;
+          }
+        }
+        this.stipeGeo.attributes.position.needsUpdate = true;
+        this.stipeGeo.computeVertexNormals();
+
+        this.lastCapApexY = apexY;
+
+        // --- 2. UPDATE ANNULUS (Veil collar) ---
+        const veilT = 0.68;
+        const veilSway = Math.sin(veilT * Math.PI) * swayAmp;
+        this.veilMesh.position.set(
+          Math.cos(curveDir) * veilSway,
+          veilT * baseHeight,
+          Math.sin(curveDir) * veilSway
+        );
+        const veilScale = (0.7 + 0.6 * Math.min(1.0, g * 1.5)) * this.scaleMultiplier;
+        this.veilMesh.scale.set(veilScale, veilScale * (1.0 + g * 0.5), veilScale);
+        this.veilMat.opacity = Math.max(0.12, 1.0 - g * 0.55);
+
+        // --- 3. UPDATE CAP VERTICES IN-PLACE ---
+        const maxR = (0.22 + 1.25 * Math.pow(g, 0.75) * capOpening) * this.scaleMultiplier;
+        this.lastCapRadius = maxR;
+        const domeDepth = (0.45 * (1.0 - g * 0.45)) * this.scaleMultiplier;
+        const cPos = this.capGeo.attributes.position.array;
+
+        for (let r = 0; r <= this.capRings; r++) {
+          const u = r / this.capRings; // 0 at top apex, 1 at rim
+          const ringR = maxR * Math.sin(u * Math.PI * 0.5);
+          const edgeFlare = Math.pow(u, 4) * (g > 0.75 ? (g - 0.75) * 0.35 : 0.0);
+          const ringY = domeDepth * Math.cos(u * Math.PI * 0.52) + edgeFlare;
+
+          for (let s = 0; s <= this.capSegments; s++) {
+            const angle = (s / this.capSegments) * Math.PI * 2;
+            const idx = (r * (this.capSegments + 1) + s) * 3;
+
+            // Wave ripples at outer rim
+            let wave = 0;
+            if (u > 0.35) {
+              const edgeFactor = (u - 0.35) / 0.65;
+              wave = (Math.sin(angle * 7) * 0.5 + Math.cos(angle * 14) * 0.25) * waviness * edgeFactor * (g + 0.2);
+            }
+
+            cPos[idx + 0] = Math.cos(angle) * ringR;
+            cPos[idx + 1] = ringY + wave;
+            cPos[idx + 2] = Math.sin(angle) * ringR;
+          }
+        }
+        this.capGeo.attributes.position.needsUpdate = true;
+        this.capGeo.computeVertexNormals();
+
+        this.capMesh.position.set(apexX, apexY + domeDepth * 0.1, apexZ);
+        this.capMesh.rotation.z = Math.sin(curveDir) * (0.15 * stemCurve);
+        this.capMesh.rotation.x = Math.cos(curveDir) * (0.15 * stemCurve);
+
+        // --- 4. UPDATE GILLS UNDERNEATH ---
+        const gillVis = g > 0.35 ? Math.min(1.0, (g - 0.35) * 2.5) : 0.0;
+        this.gillsGroup.position.copy(this.capMesh.position);
+        this.gillsGroup.rotation.copy(this.capMesh.rotation);
+
+        const gillLength = maxR * 0.88;
+        const gillHeight = domeDepth * 0.65 * gillVis;
+
+        for (let k = 0; k < this.NUM_GILLS; k++) {
+          const m = this.gillMeshes[k];
+          m.visible = gillVis > 0.05;
+          if (m.visible) {
+            m.scale.set(gillLength, gillHeight, 1);
+          }
+        }
+
+        // --- 5. UPDATE GUTTATION DROPLETS ---
+        this.dropsGroup.position.copy(this.capMesh.position);
+        this.dropsGroup.rotation.copy(this.capMesh.rotation);
+        const dropVisibility = g > 0.4 ? Math.min(1.0, (g - 0.4) * 2.0) : 0.0;
+
+        for (let d = 0; d < this.dropMeshes.length; d++) {
+          const item = this.dropMeshes[d];
+          item.mesh.visible = dropVisibility > 0.05;
+          if (item.mesh.visible) {
+            const u = item.relU;
+            const r = maxR * Math.sin(u * Math.PI * 0.5);
+            const y = domeDepth * Math.cos(u * Math.PI * 0.52) + 0.02;
+            item.mesh.position.set(
+              Math.cos(item.relAngle) * r,
+              y,
+              Math.sin(item.relAngle) * r
+            );
+            const s = (0.6 + 0.5 * dropVisibility) * this.scaleMultiplier;
+            item.mesh.scale.set(s, s, s);
+          }
+        }
+
+        this.group.visible = globalGrowth >= this.phaseShift * 0.5;
+      }
+    }
+
+    // --- INSTANTIATE MUSHROOM SPECIMENS ---
+    const mushrooms = [];
+    mushrooms.push(new DynamicMushroom(scene, { x: 0, z: 0, scale: 1.0, phaseShift: 0, curveDir: 0.4 }));
+    mushrooms.push(new DynamicMushroom(scene, { x: -0.65, z: 0.35, scale: 0.72, phaseShift: 0.18, curveDir: 2.5 }));
+    mushrooms.push(new DynamicMushroom(scene, { x: 0.55, z: -0.4, scale: 0.52, phaseShift: 0.38, curveDir: -1.2 }));
+
+    // --- UI STATE & CONTROLS BINDING ---
+    const state = {
+      progress: 80,
+      isPlaying: true,
+      isLooping: false,
+      speed: 1.0,
+      flaring: 1.10,
+      waviness: 0.08,
+      curvature: 0.35,
+      clusterMode: 'duo',
+      sporeCount: 1200,
+      vortexSpeed: 1.2,
+      pulseSpeed: 1.8,
+      audioActive: false,
+      envGlow: 1.0,
+      wispCount: 80,
+      showGodRays: true,
+      showFlora: true
+    };
+
+    const slProgress = document.getElementById('sl-progress');
+    const vProgress = document.getElementById('v-progress');
+    const txtStage = document.getElementById('txt-stage');
+    const slSpeed = document.getElementById('sl-speed');
+    const vSpeed = document.getElementById('v-speed');
+    const btnPlay = document.getElementById('btn-play');
+    const btnLoop = document.getElementById('btn-loop');
+    const btnReset = document.getElementById('btn-reset');
+
+    const slFlaring = document.getElementById('sl-flaring');
+    const vFlaring = document.getElementById('v-flaring');
+    const slWave = document.getElementById('sl-wave');
+    const vWave = document.getElementById('v-wave');
+    const slCurve = document.getElementById('sl-curve');
+    const vCurve = document.getElementById('v-curve');
+
+    const slSpores = document.getElementById('sl-spores');
+    const vSpores = document.getElementById('v-spores');
+    const slWind = document.getElementById('sl-wind');
+    const vWind = document.getElementById('v-wind');
+    const slPulse = document.getElementById('sl-pulse');
+
+    const telHeight = document.getElementById('tel-height');
+    const telCap = document.getElementById('tel-cap');
+    const telSpores = document.getElementById('tel-spores');
+
+    function updateStageName(p) {
+      const nodes = document.querySelectorAll('.timeline-node');
+      nodes.forEach(n => n.classList.remove('active'));
+
+      if (p < 20) {
+        txtStage.textContent = "① 原基卵蕾期 (Button)";
+        nodes[0].classList.add('active');
+      } else if (p < 48) {
+        txtStage.textContent = "② 菌柄拔高向光期 (Stretching)";
+        nodes[1].classList.add('active');
+      } else if (p < 72) {
+        txtStage.textContent = "③ 菌幕破裂展露 (Veil Rupture)";
+        nodes[2].classList.add('active');
+      } else if (p < 90) {
+        txtStage.textContent = "④ 膨脹開傘微分期 (Cap Flaring)";
+        nodes[3].classList.add('active');
+      } else {
+        txtStage.textContent = "⑤ 孢子狂湧成熟期 (Sporulation)";
+        nodes[4].classList.add('active');
+      }
+    }
+
+    slProgress.addEventListener('input', (e) => {
+      state.progress = parseFloat(e.target.value);
+      vProgress.textContent = `${Math.round(state.progress)}%`;
+      updateStageName(state.progress);
+    });
+
+    slSpeed.addEventListener('input', (e) => {
+      state.speed = parseFloat(e.target.value);
+      vSpeed.textContent = `${state.speed.toFixed(1)}x`;
+    });
+
+    btnPlay.addEventListener('click', () => {
+      state.isPlaying = !state.isPlaying;
+      btnPlay.textContent = state.isPlaying ? '暫停縮時' : '自動縮時播放';
+      btnPlay.classList.toggle('active', state.isPlaying);
+    });
+
+    btnLoop.addEventListener('click', () => {
+      state.isLooping = !state.isLooping;
+      btnLoop.classList.toggle('active', state.isLooping);
+    });
+
+    btnReset.addEventListener('click', () => {
+      state.progress = 0;
+      slProgress.value = 0;
+      vProgress.textContent = "0%";
+      updateStageName(0);
+    });
+
+    document.querySelectorAll('.timeline-node').forEach(node => {
+      node.addEventListener('click', () => {
+        const target = parseFloat(node.getAttribute('data-target'));
+        state.progress = target;
+        slProgress.value = target;
+        vProgress.textContent = `${target}%`;
+        updateStageName(target);
+      });
+    });
+
+    slFlaring.addEventListener('input', (e) => {
+      state.flaring = parseFloat(e.target.value);
+      vFlaring.textContent = state.flaring.toFixed(2);
+    });
+
+    slWave.addEventListener('input', (e) => {
+      state.waviness = parseFloat(e.target.value);
+      vWave.textContent = state.waviness.toFixed(2);
+    });
+
+    slCurve.addEventListener('input', (e) => {
+      state.curvature = parseFloat(e.target.value);
+      vCurve.textContent = state.curvature.toFixed(2);
+    });
+
+    slSpores.addEventListener('input', (e) => {
+      state.sporeCount = parseInt(e.target.value);
+      vSpores.textContent = `${state.sporeCount} 粒子`;
+    });
+
+    slWind.addEventListener('input', (e) => {
+      state.vortexSpeed = parseFloat(e.target.value);
+      vWind.textContent = state.vortexSpeed.toFixed(1);
+    });
+
+    slPulse.addEventListener('input', (e) => {
+      state.pulseSpeed = parseFloat(e.target.value);
+    });
+
+    const btnSingle = document.getElementById('btn-single');
+    const btnDuo = document.getElementById('btn-duo');
+    const btnColony = document.getElementById('btn-colony');
+
+    function setClusterMode(mode) {
+      state.clusterMode = mode;
+      btnSingle.classList.toggle('active', mode === 'single');
+      btnDuo.classList.toggle('active', mode === 'duo');
+      btnColony.classList.toggle('active', mode === 'colony');
+
+      if (mode === 'single') {
+        mushrooms[0].group.visible = true;
+        mushrooms[1].group.visible = false;
+        mushrooms[2].group.visible = false;
+      } else if (mode === 'duo') {
+        mushrooms[0].group.visible = true;
+        mushrooms[1].group.visible = true;
+        mushrooms[2].group.visible = false;
+      } else {
+        mushrooms[0].group.visible = true;
+        mushrooms[1].group.visible = true;
+        mushrooms[2].group.visible = true;
+      }
+    }
+    btnSingle.addEventListener('click', () => setClusterMode('single'));
+    btnDuo.addEventListener('click', () => setClusterMode('duo'));
+    btnColony.addEventListener('click', () => setClusterMode('colony'));
+    setClusterMode('duo');
+
+    function applySpecies(key) {
+      activePreset = SPECIES_PRESETS[key];
+      document.querySelectorAll('[id^="preset-"]').forEach(b => b.classList.remove('active'));
+      document.getElementById(`preset-${key}`).classList.add('active');
+
+      mushrooms.forEach(m => m.applyPreset(activePreset));
+      sporeMat.color.setHex(activePreset.sporeColor);
+      clusterGlowLight.color.setHex(activePreset.lightColor);
+      rimLight.color.setHex(activePreset.lightColor);
+    }
+
+    document.getElementById('preset-mycena').addEventListener('click', () => applySpecies('mycena'));
+    document.getElementById('preset-amanita').addEventListener('click', () => applySpecies('amanita'));
+    document.getElementById('preset-melanin').addEventListener('click', () => applySpecies('melanin'));
+    document.getElementById('preset-golden').addEventListener('click', () => applySpecies('golden'));
+    document.getElementById('preset-ghost').addEventListener('click', () => applySpecies('ghost'));
+
+    // Camera viewpoints
+    document.getElementById('cam-wide-env').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(0, 4.8, 11.2), new THREE.Vector3(0, 1.8, 0));
+    });
+    document.getElementById('cam-cinematic').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(0, 3.2, 5.8), new THREE.Vector3(0, 1.3, 0));
+    });
+    document.getElementById('cam-gills').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(0.1, 0.9, 1.8), new THREE.Vector3(0, 1.6, 0));
+    });
+    document.getElementById('cam-cap').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(0.2, 3.8, 1.4), new THREE.Vector3(0, 2.0, 0));
+    });
+    document.getElementById('cam-mycelium').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(1.8, 0.7, 2.2), new THREE.Vector3(0, 0.2, 0));
+    });
+
+    // Environment controls
+    const slEnvGlow = document.getElementById('sl-env-glow');
+    const vEnvGlow = document.getElementById('v-env-glow');
+    const slWisps = document.getElementById('sl-wisps');
+    const vWisps = document.getElementById('v-wisps');
+    const btnToggleGodrays = document.getElementById('btn-toggle-godrays');
+    const btnToggleFlora = document.getElementById('btn-toggle-flora');
+
+    slEnvGlow.addEventListener('input', (e) => {
+      state.envGlow = parseFloat(e.target.value) / 100.0;
+      vEnvGlow.textContent = `${Math.round(state.envGlow * 100)}%`;
+      ambientLight.intensity = 1.5 * state.envGlow;
+    });
+
+    slWisps.addEventListener('input', (e) => {
+      state.wispCount = parseInt(e.target.value);
+      vWisps.textContent = `${state.wispCount} 隻`;
+    });
+
+    btnToggleGodrays.addEventListener('click', () => {
+      state.showGodRays = !state.showGodRays;
+      godRaysGroup.visible = state.showGodRays;
+      btnToggleGodrays.classList.toggle('active', state.showGodRays);
+      btnToggleGodrays.textContent = state.showGodRays ? '林間聖光: 開' : '林間聖光: 關';
+    });
+
+    btnToggleFlora.addEventListener('click', () => {
+      state.showFlora = !state.showFlora;
+      floraGroup.visible = state.showFlora;
+      btnToggleFlora.classList.toggle('active', state.showFlora);
+      btnToggleFlora.textContent = state.showFlora ? '奇幻共生植群: 開' : '奇幻共生植群: 關';
+    });
+
+    let camTween = null;
+    function animateCamera(targetPos, targetLookAt) {
+      const startPos = camera.position.clone();
+      const startTarget = controls.target.clone();
+      let alpha = 0;
+      if (camTween) clearInterval(camTween);
+      camTween = setInterval(() => {
+        alpha += 0.05;
+        if (alpha >= 1) {
+          alpha = 1;
+          clearInterval(camTween);
+        }
+        const ease = 0.5 - 0.5 * Math.cos(Math.PI * alpha);
+        camera.position.lerpVectors(startPos, targetPos, ease);
+        controls.target.lerpVectors(startTarget, targetLookAt, ease);
+      }, 16);
+    }
+
+    // --- SYNTHETIC AMBIENT SOUND (Web Audio API) ---
+    let audioCtx = null;
+    let droneOsc = null;
+    const soundBtn = document.getElementById('sound-btn');
+
+    soundBtn.addEventListener('click', () => {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        droneOsc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        droneOsc.type = 'sine';
+        droneOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(180, audioCtx.currentTime);
+
+        gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+        droneOsc.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        droneOsc.start();
+        state.audioActive = true;
+        soundBtn.innerHTML = `<span>環境微光聲態: 開啟 (55Hz 胞質頻率)</span>`;
+      } else {
+        if (audioCtx.state === 'running') {
+          audioCtx.suspend();
+          state.audioActive = false;
+          soundBtn.innerHTML = `<span>環境微光聲態: 關</span>`;
+        } else {
+          audioCtx.resume();
+          state.audioActive = true;
+          soundBtn.innerHTML = `<span>環境微光聲態: 開啟 (55Hz 胞質頻率)</span>`;
+        }
+      }
+    });
+
+    // --- MAIN ANIMATION & SIMULATION LOOP ---
+    let clock = new THREE.Clock();
+    let growthDirection = 1;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      // 1. Advance Growth Time-Lapse
+      if (state.isPlaying) {
+        const step = delta * 6.5 * state.speed * growthDirection;
+        state.progress += step;
+
+        if (state.progress >= 100) {
+          if (state.isLooping) {
+            state.progress = 100;
+            growthDirection = -1;
+          } else {
+            state.progress = 0;
+          }
+        } else if (state.progress <= 0 && state.isLooping) {
+          state.progress = 0;
+          growthDirection = 1;
+        }
+
+        slProgress.value = state.progress;
+        vProgress.textContent = `${Math.round(state.progress)}%`;
+        updateStageName(state.progress);
+      }
+
+      const normGrowth = state.progress / 100.0;
+
+      // 2. Update Dynamic Mushrooms
+      mushrooms.forEach(m => {
+        m.update(normGrowth, state);
+      });
+
+      // 3. Ground Mycelium Biological Pulse
+      myceliumLines.forEach(item => {
+        const pulse = 0.5 + 0.5 * Math.sin(time * state.pulseSpeed * 2.0 + item.offset);
+        item.mat.emissiveIntensity = item.baseEmissive * (0.4 + 1.2 * pulse);
+      });
+
+      // 4. Spore Dynamics (Swirling & Micro-thermal dispersion)
+      const positions = sporeGeo.attributes.position.array;
+      const mainApexY = mushrooms[0].lastCapApexY;
+      const mainRadius = mushrooms[0].lastCapRadius;
+      const sporeActive = normGrowth > 0.45;
+      const activeCount = sporeActive ? Math.min(MAX_SPORES, state.sporeCount) : 0;
+
+      for (let i = 0; i < MAX_SPORES; i++) {
+        if (i < activeCount) {
+          sporeLifetimes[i] += delta * 15 * state.vortexSpeed;
+
+          // If spore dies or is reset, spawn beneath mushroom cap gills
+          if (sporeLifetimes[i] > sporeMaxLives[i] || positions[i * 3 + 1] > 6.0) {
+            sporeLifetimes[i] = 0;
+            const spawnAngle = Math.random() * Math.PI * 2;
+            const spawnR = (0.1 + Math.random() * 0.8) * mainRadius;
+            positions[i * 3 + 0] = Math.cos(spawnAngle) * spawnR + (Math.random() - 0.5) * 0.1;
+            positions[i * 3 + 1] = Math.max(0.4, mainApexY - 0.15 - Math.random() * 0.1);
+            positions[i * 3 + 2] = Math.sin(spawnAngle) * spawnR + (Math.random() - 0.5) * 0.1;
+
+            sporeVelocities[i].set(
+              (Math.random() - 0.5) * 0.012,
+              0.008 + Math.random() * 0.018 * state.vortexSpeed,
+              (Math.random() - 0.5) * 0.012
+            );
+          } else {
+            // Apply gentle turbulent curl / vortex
+            const y = positions[i * 3 + 1];
+            const vortexAngle = time * 0.8 * state.vortexSpeed + y * 1.5;
+            const curlX = Math.cos(vortexAngle) * 0.004 * state.vortexSpeed;
+            const curlZ = Math.sin(vortexAngle) * 0.004 * state.vortexSpeed;
+
+            positions[i * 3 + 0] += sporeVelocities[i].x + curlX;
+            positions[i * 3 + 1] += sporeVelocities[i].y;
+            positions[i * 3 + 2] += sporeVelocities[i].z + curlZ;
+          }
+        } else {
+          positions[i * 3 + 1] = -10.0;
+        }
+      }
+      sporeGeo.attributes.position.needsUpdate = true;
+
+      // 5. Update Telemetry
+      const curH = (0.25 + 2.2 * Math.pow(normGrowth, 0.85)) * 3.5;
+      telHeight.textContent = `${curH.toFixed(1)} cm`;
+      const curD = (0.22 + 1.25 * Math.pow(normGrowth, 0.75) * state.flaring) * 4.2;
+      telCap.textContent = `${curD.toFixed(1)} cm`;
+      const curSpores = sporeActive ? Math.round(normGrowth * state.sporeCount * 0.85) : 0;
+      telSpores.textContent = `${curSpores} 顆/秒`;
+
+      // 6. Avatar Bioluminescent Environment Dynamic Simulation
+      if (skyDome && skyDome.material.uniforms) {
+        skyDome.material.uniforms.time.value = time;
+        skyDome.material.uniforms.glowStrength.value = state.envGlow;
+      }
+
+      // Sync tree vines pulsing with biological cycle
+      treeVinesList.forEach(item => {
+        const vPulse = 0.5 + 0.5 * Math.sin(time * state.pulseSpeed * 1.5 + item.phase);
+        item.mat.emissiveIntensity = item.baseIntensity * (0.6 + 0.9 * vPulse) * state.envGlow;
+      });
+
+      // Companion fungi pulsing
+      companionFungiMats.forEach(item => {
+        const cPulse = 0.5 + 0.5 * Math.sin(time * state.pulseSpeed * 2.2 + item.phase);
+        item.mat.emissiveIntensity = item.baseIntensity * (0.5 + 0.9 * cPulse) * state.envGlow;
+      });
+
+      // Avatar Will-o'-the-Wisps Drifting & Hovering Dynamics
+      const wPos = wispGeo.attributes.position.array;
+      for (let i = 0; i < MAX_WISPS; i++) {
+        if (i < state.wispCount) {
+          const d = wispData[i];
+          const curA = d.baseAngle + time * d.speedA;
+          const curR = d.baseR + Math.sin(time * 0.4 + d.phase) * 0.4;
+          wPos[i * 3 + 0] = Math.cos(curA) * curR;
+          wPos[i * 3 + 1] = d.baseY + Math.sin(time * d.speedY + d.phase) * d.bobAmp;
+          wPos[i * 3 + 2] = Math.sin(curA) * curR;
+        } else {
+          wPos[i * 3 + 1] = -100.0;
+        }
+      }
+      wispGeo.attributes.position.needsUpdate = true;
+
+      // Volumetric God Rays Breathing Shimmer
+      if (state.showGodRays) {
+        godRayMat.opacity = (0.09 + 0.05 * Math.sin(time * 0.8)) * state.envGlow;
+      }
+
+      // 7. Camera Orbit Damping & Render
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateStageName(state.progress);
+    animate();
+  </script>
+</body>
+</html>

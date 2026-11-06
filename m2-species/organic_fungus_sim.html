@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>噬電共生真菌 (真實活體生物模擬) | Organic Radiotrophic Fungus</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050807;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud * { pointer-events: auto; }
+
+    header {
+      top: 24px;
+      left: 28px;
+    }
+    h1 {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #a7f3d0, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .species-tag {
+      font-size: 11px;
+      color: #6ee7b7;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+
+    .panel {
+      background: rgba(10, 20, 16, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(110, 231, 183, 0.2);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    #controls-panel {
+      bottom: 25px;
+      left: 28px;
+      width: 360px;
+    }
+    #bio-panel {
+      top: 24px;
+      right: 28px;
+      width: 340px;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #a7f3d0;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 10px #34d399;
+    }
+
+    .bio-point {
+      margin-bottom: 12px;
+      padding-left: 12px;
+      border-left: 2px solid #34d399;
+    }
+    .bio-point:last-child { margin-bottom: 0; }
+    .bio-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+    .bio-desc {
+      font-size: 11.5px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-top: 3px;
+    }
+
+    .control-group {
+      margin-bottom: 14px;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    .control-label span:last-child {
+      color: #34d399;
+      font-family: monospace;
+      font-weight: 600;
+    }
+    input[type=range] {
+      width: 100%;
+      height: 5px;
+      accent-color: #34d399;
+      background: #1e293b;
+      border-radius: 3px;
+      outline: none;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: #6ee7b7;
+      padding: 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(52, 211, 153, 0.28);
+      color: #fff;
+    }
+    .btn.active {
+      background: #34d399;
+      color: #022c22;
+      border-color: #34d399;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <header class="hud">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2C7 2 3 7 3 12c0 2.5 1.5 5 3.5 6.5C7.5 19.5 9 22 12 22s4.5-2.5 5.5-3.5c2-1.5 3.5-4 3.5-6.5 0-5-4-10-9-10z"/>
+        <path d="M12 12v10"/>
+      </svg>
+      噬電共生真菌 (真實活體生物模擬)
+    </h1>
+    <div class="species-tag">KINGDOM FUNGI // RADIOMYCES ELECTROVORUS</div>
+  </header>
+
+  <div id="bio-panel" class="hud panel">
+    <div class="panel-title">純生物性電磁感應器官</div>
+
+    <div class="bio-point">
+      <div class="bio-name">1. 黑色素吸波菌傘 (Melanized Pileus)</div>
+      <div class="bio-desc">純天然肉質菌傘，表面密布高純度有機黑色素（Eumelanin），如天鵝絨般柔軟且帶有濕潤微光，以生物光電通道直接吸收空間中的電磁波動。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">2. 柔薄菌褶冷光 (Electroluminescent Gills)</div>
+      <div class="bio-desc">傘下密布數百片柔軟如絲的真菌菌褶。當微弱電磁擾動穿透時，活體酵素通道被激發，在褶縫間流淌出幽藍與青碧色的生物冷光。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">3. 纖維菌柄與菌環 (Fibrous Stipe & Veil)</div>
+      <div class="bio-desc">肉質菌柄由無數緊密交織的有機菌絲束構成，天然的質子泵通道將能量向下傳導至根部。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">4. 飄逸帶電發光孢子 (Luminescent Spores)</div>
+      <div class="bio-desc">隨風緩緩飄散的微小真菌孢子，表面帶有天然微弱靜電荷，在空氣中如螢火微粒般冉冉升起。</div>
+    </div>
+  </div>
+
+  <div id="controls-panel" class="hud panel">
+    <div class="panel-title">活體生理調節面板</div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>環境電磁信號場強 (EM Signal Flux)</span>
+        <span id="v-flux">中等擾動 (微弱冷光)</span>
+      </div>
+      <input type="range" id="sl-flux" min="10" max="100" step="1" value="55">
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>菌傘黑色素濃度 (Melanin Density)</span>
+        <span id="v-melanin">黑曜琥珀色 (85%)</span>
+      </div>
+      <input type="range" id="sl-melanin" min="30" max="100" step="1" value="85">
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>微發光孢子釋放速率 (Spore Release)</span>
+        <span id="v-spores">自然漂浮 (300/s)</span>
+      </div>
+      <input type="range" id="sl-spores" min="50" max="600" step="10" value="300">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn active" id="btn-glow">菌褶生物冷光</button>
+      <button class="btn active" id="btn-spores">飄移發光孢子</button>
+      <button class="btn" id="btn-wave">接收微弱電磁波</button>
+    </div>
+  </div>
+
+  <script>
+    // --- 3D Scene Initialization ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x050a08, 0.035);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 3.2, 7.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.3;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.02;
+    controls.minDistance = 2.5;
+    controls.maxDistance = 16;
+    controls.target.set(0, 1.4, 0);
+
+    // --- Lighting: Soft Natural Forest Twilight & Bioluminescence ---
+    const ambientLight = new THREE.AmbientLight(0x0f201b, 1.5);
+    scene.add(ambientLight);
+
+    const moonLight = new THREE.DirectionalLight(0xa7f3d0, 1.6);
+    moonLight.position.set(4, 8, 4);
+    scene.add(moonLight);
+
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
+    rimLight.position.set(-5, 4, -4);
+    scene.add(rimLight);
+
+    // Internal Gill Bioluminescence Point Light
+    const gillLight = new THREE.PointLight(0x34d399, 3.0, 5.5);
+    gillLight.position.set(0, 1.9, 0);
+    scene.add(gillLight);
+
+    // --- Ground: Dark Damp Forest Humus & Mossy Soil ---
+    const groundGeo = new THREE.CylinderGeometry(4.2, 4.6, 0.3, 48);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: 0x0a1410,
+      roughness: 0.95,
+      metalness: 0.1
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.position.y = -0.15;
+    scene.add(ground);
+
+    // --- Fungal Materials (Purely Organic & Moist) ---
+    // Cap Material: Deep velvety bio-melanin with fleshy translucence
+    const capMaterial = new THREE.MeshStandardMaterial({
+      color: 0x141f1a,
+      roughness: 0.45,
+      metalness: 0.15,
+      emissive: 0x05130e,
+      emissiveIntensity: 0.3
+    });
+
+    // Stipe Material: Pale fibrous fungal flesh
+    const stipeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd1fae5,
+      roughness: 0.75,
+      metalness: 0.05,
+      emissive: 0x064e3b,
+      emissiveIntensity: 0.2
+    });
+
+    // Gill Bioluminescent Material: Soft glowing living fungal lamellae
+    const gillMaterial = new THREE.MeshStandardMaterial({
+      color: 0x6ee7b7,
+      emissive: 0x10b981,
+      emissiveIntensity: 1.8,
+      roughness: 0.3,
+      metalness: 0.05
+    });
+
+    // --- Mushroom Cluster Group ---
+    const fungusCluster = new THREE.Group();
+    scene.add(fungusCluster);
+
+    // 1. MAIN MATURE MUSHROOM
+    const mainMushroom = new THREE.Group();
+    fungusCluster.add(mainMushroom);
+
+    // Natural curved stipe (stem)
+    const stipeCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0.08, 0.7, 0.04),
+      new THREE.Vector3(-0.06, 1.4, -0.02),
+      new THREE.Vector3(0.02, 2.05, 0.01)
+    ]);
+    const stipeGeo = new THREE.TubeGeometry(stipeCurve, 32, 0.16, 16, false);
+    const mainStipe = new THREE.Mesh(stipeGeo, stipeMaterial);
+    mainMushroom.add(mainStipe);
+
+    // Annulus (Fungal Veil collar around stipe)
+    const annulusGeo = new THREE.TorusGeometry(0.20, 0.04, 8, 24);
+    annulusGeo.rotateX(Math.PI / 2);
+    const annulus = new THREE.Mesh(annulusGeo, stipeMaterial);
+    annulus.position.set(-0.03, 1.45, -0.01);
+    annulus.rotation.z = 0.15;
+    mainMushroom.add(annulus);
+
+    // Realistic Organic Fungal Cap (Classic natural mushroom dome)
+    const capProfile = [];
+    const pointsCount = 30;
+    for (let i = 0; i <= pointsCount; i++) {
+      const t = i / pointsCount;
+      // Natural mushroom cap curve: slight central peak/dip, smoothly swelling out and downward
+      const r = 1.35 * Math.sin(t * Math.PI * 0.5);
+      const y = 0.55 * Math.cos(t * Math.PI * 0.55) - 0.25;
+      capProfile.push(new THREE.Vector2(r, y));
+    }
+    const capGeo = new THREE.LatheGeometry(capProfile, 48);
+
+    // Add subtle organic undulating imperfections to the vertices
+    const pos = capGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const u = pos.getX(i);
+      const v = pos.getY(i);
+      const w = pos.getZ(i);
+      const dist = Math.sqrt(u * u + w * w);
+      // Soft organic waviness at the cap rim
+      if (dist > 0.6) {
+        const angle = Math.atan2(w, u);
+        const wave = Math.sin(angle * 7) * 0.04 + Math.cos(angle * 13) * 0.02;
+        pos.setY(i, v + wave);
+      }
+    }
+    capGeo.computeVertexNormals();
+
+    const mainCap = new THREE.Mesh(capGeo, capMaterial);
+    mainCap.position.set(0.02, 2.15, 0.01);
+    mainCap.rotation.z = -0.05;
+    mainCap.rotation.x = 0.04;
+    mainMushroom.add(mainCap);
+
+    // Delicate Natural Fungal Gills (Under-cap Lamellae)
+    const gillsCount = 56;
+    for (let i = 0; i < gillsCount; i++) {
+      const angle = (i / gillsCount) * Math.PI * 2;
+      const gillLength = 1.15;
+      const gillGeo = new THREE.BoxGeometry(0.012, 0.16, gillLength);
+      const gillMesh = new THREE.Mesh(gillGeo, gillMaterial);
+
+      gillMesh.position.set(
+        Math.cos(angle) * (gillLength * 0.48),
+        -0.12,
+        Math.sin(angle) * (gillLength * 0.48)
+      );
+      gillMesh.rotation.y = -angle;
+      mainCap.add(gillMesh);
+    }
+
+    // 2. SMALLER BABY MUSHROOMS (Natural Cluster Growth)
+    function createBabyMushroom(x, z, scale, tiltAngle) {
+      const sub = new THREE.Group();
+      sub.position.set(x, 0, z);
+      sub.scale.set(scale, scale, scale);
+      sub.rotation.y = tiltAngle;
+      sub.rotation.z = 0.12;
+
+      const subCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0.05, 0.5, 0.02),
+        new THREE.Vector3(0, 1.1, 0)
+      ]);
+      const subStipe = new THREE.Mesh(new THREE.TubeGeometry(subCurve, 16, 0.12, 12, false), stipeMaterial);
+      sub.add(subStipe);
+
+      const subCap = new THREE.Mesh(capGeo, capMaterial);
+      subCap.position.set(0, 1.15, 0);
+      subCap.scale.set(0.65, 0.65, 0.65);
+      sub.add(subCap);
+
+      // Baby gills
+      for (let i = 0; i < 28; i++) {
+        const angle = (i / 28) * Math.PI * 2;
+        const g = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.1, 0.7), gillMaterial);
+        g.position.set(Math.cos(angle) * 0.28, -0.08, Math.sin(angle) * 0.28);
+        g.rotation.y = -angle;
+        subCap.add(g);
+      }
+
+      return sub;
+    }
+
+    fungusCluster.add(createBabyMushroom(0.85, 0.45, 0.55, 0.6));
+    fungusCluster.add(createBabyMushroom(-0.75, -0.65, 0.45, -1.2));
+    fungusCluster.add(createBabyMushroom(0.55, -0.85, 0.35, 2.1));
+
+    // 3. LIVING UNDERGROUND MYCELIUM WEB (Organic Fungal Threads on Damp Ground)
+    const myceliumMat = new THREE.LineBasicMaterial({
+      color: 0x6ee7b7,
+      transparent: true,
+      opacity: 0.65
+    });
+
+    const myceliumGroup = new THREE.Group();
+    scene.add(myceliumGroup);
+
+    function growOrganicThread(start, dir, len, depth) {
+      if (depth > 4 || len < 0.18) return;
+      const end = start.clone().add(dir.clone().multiplyScalar(len));
+      end.y = 0.01 + Math.random() * 0.015;
+
+      const geo = new THREE.BufferGeometry().setFromPoints([start, end]);
+      myceliumGroup.add(new THREE.Line(geo, myceliumMat));
+
+      const branchCount = Math.floor(Math.random() * 2) + 2;
+      for (let b = 0; b < branchCount; b++) {
+        const spread = (Math.random() - 0.5) * 1.2;
+        const newDir = dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), spread).normalize();
+        growOrganicThread(end, newDir, len * (0.65 + Math.random() * 0.2), depth + 1);
+      }
+    }
+
+    for (let r = 0; r < 12; r++) {
+      const angle = (r / 12) * Math.PI * 2;
+      const st = new THREE.Vector3(Math.cos(angle) * 0.2, 0.01, Math.sin(angle) * 0.2);
+      const dr = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+      growOrganicThread(st, dr, 0.75, 1);
+    }
+
+    // 4. FLOATING BIOLUMINESCENT SPORES (Organic Spore Cloud)
+    const sporeCount = 350;
+    const sporeGeo = new THREE.BufferGeometry();
+    const sporePos = new Float32Array(sporeCount * 3);
+    const sporeVels = [];
+
+    for (let i = 0; i < sporeCount; i++) {
+      const r = Math.random() * 2.2;
+      const theta = Math.random() * Math.PI * 2;
+      sporePos[i * 3]     = Math.cos(theta) * r;
+      sporePos[i * 3 + 1] = 0.2 + Math.random() * 3.2;
+      sporePos[i * 3 + 2] = Math.sin(theta) * r;
+
+      sporeVels.push({
+        yVel: 0.004 + Math.random() * 0.006,
+        driftAngle: Math.random() * Math.PI * 2,
+        driftSpeed: 0.003 + Math.random() * 0.005
+      });
+    }
+    sporeGeo.setAttribute('position', new THREE.BufferAttribute(sporePos, 3));
+
+    const sporeMat = new THREE.PointsMaterial({
+      color: 0x6ee7b7,
+      size: 0.065,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+    const sporeCloud = new THREE.Points(sporeGeo, sporeMat);
+    scene.add(sporeCloud);
+
+    // --- Interactive Controls ---
+    let emFlux = 0.55;
+    let melaninDensity = 0.85;
+    let sporeSpeed = 1.0;
+    let showGlow = true;
+    let showSpores = true;
+    let pulseEvent = 0.0;
+
+    const slFlux = document.getElementById('sl-flux');
+    const slMelanin = document.getElementById('sl-melanin');
+    const slSpores = document.getElementById('sl-spores');
+    const vFlux = document.getElementById('v-flux');
+    const vMelanin = document.getElementById('v-melanin');
+    const vSpores = document.getElementById('v-spores');
+    const btnGlow = document.getElementById('btn-glow');
+    const btnSpores = document.getElementById('btn-spores');
+    const btnWave = document.getElementById('btn-wave');
+
+    slFlux.oninput = (e) => {
+      emFlux = parseFloat(e.target.value) / 100;
+      if (emFlux < 0.35) {
+        vFlux.textContent = "微弱擾動 (幽暗暗光)";
+      } else if (emFlux < 0.75) {
+        vFlux.textContent = "中等擾動 (微弱冷光)";
+      } else {
+        vFlux.textContent = "強烈激發 (明亮碧藍冷光)";
+      }
+      updatePhysiology();
+    };
+
+    slMelanin.oninput = (e) => {
+      melaninDensity = parseFloat(e.target.value) / 100;
+      vMelanin.textContent = `深黑曜色 (${Math.round(melaninDensity * 100)}%)`;
+      // Update cap color based on melanin
+      const darkness = 0.22 * (1.0 - melaninDensity * 0.6);
+      capMaterial.color.setRGB(darkness * 0.8, darkness, darkness * 0.9);
+    };
+
+    slSpores.oninput = (e) => {
+      const val = parseInt(e.target.value);
+      sporeSpeed = val / 300;
+      vSpores.textContent = `自然漂浮 (${val}/s)`;
+    };
+
+    btnGlow.onclick = () => {
+      showGlow = !showGlow;
+      btnGlow.classList.toggle('active', showGlow);
+      updatePhysiology();
+    };
+
+    btnSpores.onclick = () => {
+      showSpores = !showSpores;
+      btnSpores.classList.toggle('active', showSpores);
+      sporeCloud.visible = showSpores;
+    };
+
+    btnWave.onclick = () => {
+      pulseEvent = 1.0;
+    };
+
+    function updatePhysiology() {
+      const glowLevel = showGlow ? (emFlux * 2.2 + pulseEvent * 4.0) : 0.0;
+      gillMaterial.emissiveIntensity = glowLevel;
+      gillLight.intensity = glowLevel * 1.5;
+    }
+
+    // --- Animation Loop ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+
+      // Soft natural fungal respiration
+      const respiration = Math.sin(elapsed * 1.6) * 0.015;
+      mainCap.position.y = 2.15 + respiration;
+      mainCap.rotation.z = -0.05 + Math.sin(elapsed * 0.8) * 0.015;
+
+      // Pulse decay
+      if (pulseEvent > 0.01) {
+        pulseEvent *= 0.95;
+        updatePhysiology();
+      }
+
+      // Spore Cloud Gentle Drifting (Brownian natural upward float)
+      if (showSpores) {
+        const positions = sporeGeo.attributes.position.array;
+        for (let i = 0; i < sporeCount; i++) {
+          const idx = i * 3;
+          positions[idx + 1] += sporeVels[i].yVel * sporeSpeed;
+          positions[idx]     += Math.cos(sporeVels[i].driftAngle + elapsed * 0.5) * sporeVels[i].driftSpeed;
+          positions[idx + 2] += Math.sin(sporeVels[i].driftAngle + elapsed * 0.5) * sporeVels[i].driftSpeed;
+
+          // Loop spores back to bottom when they float too high
+          if (positions[idx + 1] > 3.8) {
+            positions[idx + 1] = 0.2 + Math.random() * 0.4;
+            const r = Math.random() * 1.5;
+            const th = Math.random() * Math.PI * 2;
+            positions[idx]     = Math.cos(th) * r;
+            positions[idx + 2] = Math.sin(th) * r;
+          }
+        }
+        sporeGeo.attributes.position.needsUpdate = true;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

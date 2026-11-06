@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kunstformen der Natur - Tafel 101: Radiomyces</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background-color: #e8decb;
+      background-image: 
+        radial-gradient(#d8cca7 12%, transparent 13%),
+        radial-gradient(#dfd4b3 12%, transparent 13%);
+      background-size: 32px 32px;
+      background-position: 0 0, 16px 16px;
+      color: #2c251e;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* Antique Lithographic Paper Plate */
+    .plate-wrapper {
+      position: relative;
+      background: #fdfaf2;
+      box-shadow: 
+        0 15px 40px rgba(70, 50, 30, 0.25),
+        0 0 0 1px #c9b794,
+        inset 0 0 60px rgba(195, 165, 115, 0.2);
+      border-radius: 4px;
+      max-width: 1000px;
+      width: 100%;
+      padding: 35px 45px;
+      border: 1px solid #c9b48c;
+    }
+
+    /* Antique Ornamental Plate Border */
+    .plate-border {
+      border: 2px solid #5a4632;
+      padding: 6px;
+      outline: 1px solid #9c8262;
+      outline-offset: 4px;
+      position: relative;
+    }
+
+    .plate-header {
+      text-align: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #cfbda2;
+      padding-bottom: 14px;
+    }
+
+    .series-title {
+      font-size: 13px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #7a6348;
+      margin-bottom: 4px;
+    }
+
+    .plate-number {
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #2b1f14;
+    }
+
+    .taxon-name {
+      font-style: italic;
+      font-size: 30px;
+      color: #3b2816;
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .german-title {
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: #6a533b;
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Main Graphical Layout */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 640px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0;
+      background: #fbf7ee;
+      border: 1px solid #e2d4bd;
+      border-radius: 4px;
+    }
+
+    #haeckel-canvas {
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+      display: block;
+    }
+
+    /* Plate Footer Explanations */
+    .plate-footer {
+      border-top: 1px solid #cfbda2;
+      margin-top: 18px;
+      padding-top: 15px;
+    }
+
+    .figure-legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #4a3b2c;
+    }
+
+    .fig-item strong {
+      font-size: 13px;
+      color: #26190e;
+      letter-spacing: 0.5px;
+    }
+
+    .controls-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(90, 70, 50, 0.06);
+      border: 1px dashed #bda787;
+      border-radius: 6px;
+      padding: 10px 18px;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toggle-btn {
+      background: #f5ecd7;
+      border: 1px solid #8e7354;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #3b2816;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: #3e2d1c;
+      color: #fdfaf2;
+      border-color: #26190e;
+    }
+
+    .toggle-btn:hover {
+      background: #ebd8b5;
+    }
+
+    .mode-tag {
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      color: #6a533b;
+    }
+  </style>
+</head>
+<body>
+
+<div class="plate-wrapper">
+  <div class="plate-border">
+    
+    <header class="plate-header">
+      <div class="series-title">Ernst Haeckel: Kunstformen der Natur // Codex Noosphera (15.0 Ma)</div>
+      <div class="plate-number">Tafel 101. - RADIOMYCES NOOSPHERAVORUS.</div>
+      <div class="taxon-name">Radiomyces noospheravorus (Haeckel / Ex-Homo Sapiens)</div>
+      <div class="german-title">Bewusstseinsstrom-Schwamm — 全球意識流之沉降真菌</div>
+    </header>
+
+    <div class="canvas-container">
+      <canvas id="haeckel-canvas" width="900" height="640"></canvas>
+    </div>
+
+    <div class="controls-strip">
+      <div class="mode-tag">顯像模式 (LITHOGRAPHISCHE MODUS)：</div>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn-engraving">古典銅版石版畫 (Antique Lithograph)</button>
+        <button class="toggle-btn" id="btn-resonance">電磁共振能量場 (EM Resonance Glow)</button>
+        <button class="toggle-btn" id="btn-animate">活體微波吞噬搏動 (Living Respiration)</button>
+      </div>
+      <div style="font-size: 12px; color: #7a6348; font-style: italic;">
+        點擊模式按鈕觀測海克爾幾何骨骼
+      </div>
+    </div>
+
+    <footer class="plate-footer">
+      <div class="figure-legend">
+        <div class="fig-item">
+          <strong>Fig. 1. Hauptpilz (未來意識折射天線)</strong><br>
+          成熟個體正視圖。放射蟲狀幾何拋物面多孔骨骼，專門接收未來人類精神引力塌縮後、折射回 1500 萬年前中新世的「全球意識流」電磁擾動波。
+        </div>
+        <div class="fig-item">
+          <strong>Fig. 2. Apex-Spiculum (量子熱噪放電棘刺)</strong><br>
+          頂生單極棘刺。水下空穴效應與質能歸零所留下的量子熱噪，經由骨架整流；超載時以聖艾爾摩之火（電暈放電）釋放人類最後個體的思維殘響。
+        </div>
+        <div class="fig-item">
+          <strong>Fig. 3. Mycelium-Archiv (全人類記憶菌絲庫)</strong><br>
+          地下分形導電菌絲網。逃過滅絕共振頻率的真菌，將全體人類消失前所爆發的龐大記憶與基因編碼，永久鐫刻於甲殼素-黑色素量子自旋陣列中。
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('haeckel-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let mode = 'engraving'; // 'engraving' or 'resonance'
+  let animating = false;
+  let animTime = 0;
+
+  const btnEngraving = document.getElementById('btn-engraving');
+  const btnResonance = document.getElementById('btn-resonance');
+  const btnAnimate = document.getElementById('btn-animate');
+
+  btnEngraving.onclick = () => {
+    mode = 'engraving';
+    btnEngraving.classList.add('active');
+    btnResonance.classList.remove('active');
+    drawPlate();
+  };
+
+  btnResonance.onclick = () => {
+    mode = 'resonance';
+    btnResonance.classList.add('active');
+    btnEngraving.classList.remove('active');
+    drawPlate();
+  };
+
+  btnAnimate.onclick = () => {
+    animating = !animating;
+    btnAnimate.classList.toggle('active', animating);
+    if (animating) loop();
+  };
+
+  function drawPlate() {
+    // Fill canvas background with clean parchment tint
+    ctx.fillStyle = '#fbf7ee';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.45;
+
+    // 1. Draw Peripheral Microscopic Specimens (Haeckel Plate Fig. 4, 5, 6, 7)
+    drawPeripheralSpecimen(150, 140, 58, 8, "Fig. 4. Sporae polyhedrae");
+    drawPeripheralSpecimen(750, 140, 58, 6, "Fig. 5. Nassellaria-Lamella");
+    drawPeripheralSpecimen(150, 500, 65, 12, "Fig. 6. Radiale Resonanzblende");
+    drawPeripheralSpecimen(750, 500, 65, 10, "Fig. 7. Coelotrochus transversus");
+
+    // 2. Draw Geodesic Mycelium Roots at Bottom (Fig. 3)
+    drawHaeckelMycelium(cx, cy + 200);
+
+    // 3. Draw Stipe (Fluted Column with Lithographic Engraving Struts)
+    drawHaeckelStipe(cx, cy + 25, 180);
+
+    // 4. Draw Main Parabolic Reflector Cap (Fig. 1 - Radiolarian Mesh)
+    drawHaeckelDishCap(cx, cy);
+
+    // 5. Draw Apex Spire & Corona Needle (Fig. 2)
+    drawHaeckelSpire(cx, cy - 80);
+
+    // 6. Draw Figure Labels
+    drawFigureLabels(cx, cy);
+  }
+
+  function drawHaeckelDishCap(cx, cy) {
+    const timeOffset = animating ? Math.sin(animTime * 2.5) * 5 : 0;
+    const radialCount = 18;
+    const widthR = 220;
+    const heightR = 110 + timeOffset;
+
+    // Under-glow in resonance mode
+    if (mode === 'resonance') {
+      const grad = ctx.createRadialGradient(cx, cy - 15, 15, cx, cy - 15, widthR * 1.15);
+      grad.addColorStop(0, 'rgba(56, 189, 248, 0.55)');
+      grad.addColorStop(0.5, 'rgba(99, 102, 241, 0.35)');
+      grad.addColorStop(1, 'rgba(251, 247, 238, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, widthR, heightR, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Outer Siliceous Rim Crenulations
+    ctx.lineWidth = 1.3;
+    ctx.strokeStyle = mode === 'resonance' ? '#2563eb' : '#3d2e1e';
+
+    // Concentric Geodesic Ellipses (Fresnel / Radiolarian Pores)
+    const tiers = 7;
+    for (let t = tiers; t >= 1; t--) {
+      const frac = t / tiers;
+      const rx = widthR * frac;
+      const ry = heightR * Math.pow(frac, 0.85);
+      const curY = cy + (1 - frac) * 40;
+
+      ctx.beginPath();
+      ctx.ellipse(cx, curY, rx, ry, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Perforated pore dots along the rim
+      const poreCount = Math.floor(radialCount * frac * 3.5);
+      for (let p = 0; p < poreCount; p++) {
+        const theta = (p / poreCount) * Math.PI * 2;
+        const px = cx + Math.cos(theta) * rx;
+        const py = curY + Math.sin(theta) * ry;
+
+        ctx.beginPath();
+        const pRadius = mode === 'resonance' ? 2.2 : 1.4;
+        ctx.arc(px, py, pRadius, 0, Math.PI * 2);
+        if (mode === 'resonance') {
+          ctx.fillStyle = (p % 2 === 0) ? '#0284c7' : '#7c3aed';
+        } else {
+          ctx.fillStyle = '#2f2115';
+        }
+        ctx.fill();
+      }
+    }
+
+    // Radial Struts / Gothic Filigree Ribs
+    for (let i = 0; i < radialCount; i++) {
+      const theta = (i / radialCount) * Math.PI * 2;
+      const outerX = cx + Math.cos(theta) * widthR;
+      const outerY = cy + Math.sin(theta) * heightR;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + 40);
+      ctx.quadraticCurveTo(
+        cx + Math.cos(theta) * (widthR * 0.45),
+        cy + 40 + Math.sin(theta) * (heightR * 0.35) - 18,
+        outerX,
+        outerY
+      );
+      ctx.strokeStyle = mode === 'resonance' ? '#4338ca' : '#453221';
+      ctx.lineWidth = (i % 2 === 0) ? 1.8 : 1.0;
+      ctx.stroke();
+
+      // Delicate marginal spicules
+      const spiculeLen = 20 + (i % 3) * 10;
+      const sx = outerX + Math.cos(theta) * spiculeLen;
+      const sy = outerY + Math.sin(theta) * spiculeLen;
+      ctx.beginPath();
+      ctx.moveTo(outerX, outerY);
+      ctx.lineTo(sx, sy);
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(sx, sy, 2.0, 0, Math.PI * 2);
+      ctx.fillStyle = mode === 'resonance' ? '#0891b2' : '#2b1b0d';
+      ctx.fill();
+    }
+  }
+
+  function drawHaeckelSpire(cx, cy) {
+    const spireH = 130;
+    const apexY = cy - spireH;
+
+    // Resonant Corona Glow
+    if (mode === 'resonance') {
+      const coronaGrad = ctx.createRadialGradient(cx, apexY, 2, cx, apexY, 60);
+      coronaGrad.addColorStop(0, '#ffffff');
+      coronaGrad.addColorStop(0.2, '#38bdf8');
+      coronaGrad.addColorStop(0.6, 'rgba(147, 51, 234, 0.45)');
+      coronaGrad.addColorStop(1, 'rgba(251, 247, 238, 0)');
+      ctx.fillStyle = coronaGrad;
+      ctx.beginPath();
+      ctx.arc(cx, apexY, 60, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Geometric Lattice Struts
+    const ribs = 8;
+    for (let r = 0; r < ribs; r++) {
+      const angle = (r / ribs) * Math.PI * 2;
+      const bx = cx + Math.cos(angle) * 35;
+      const by = cy + 22 + Math.sin(angle) * 10;
+
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(cx, apexY + 25);
+      ctx.strokeStyle = mode === 'resonance' ? '#4338ca' : '#4a3622';
+      ctx.lineWidth = 1.1;
+      ctx.stroke();
+    }
+
+    // Central Monopole Needle
+    ctx.beginPath();
+    ctx.moveTo(cx - 3.5, cy + 25);
+    ctx.lineTo(cx, apexY);
+    ctx.lineTo(cx + 3.5, cy + 25);
+    ctx.closePath();
+    ctx.fillStyle = mode === 'resonance' ? '#d97706' : '#2d1e11';
+    ctx.fill();
+
+    // Cross-hatched rings
+    for (let y = apexY + 12; y < cy + 25; y += 10) {
+      const halfW = ((y - apexY) / (cy + 25 - apexY)) * 3.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - halfW - 2, y);
+      ctx.lineTo(cx + halfW + 2, y);
+      ctx.strokeStyle = mode === 'resonance' ? '#f59e0b' : '#6b4f33';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+
+    // Corona Discharge Spark Needles
+    const sparks = 12;
+    for (let s = 0; s < sparks; s++) {
+      const phi = (s / sparks) * Math.PI * 2 + (animating ? animTime * 3 : 0);
+      const sparkLen = 14 + (s % 3) * 10;
+      const ex = cx + Math.cos(phi) * sparkLen;
+      const ey = apexY + Math.sin(phi) * (sparkLen * 0.6);
+
+      ctx.beginPath();
+      ctx.moveTo(cx, apexY);
+      ctx.lineTo(ex, ey);
+      ctx.strokeStyle = mode === 'resonance' ? '#0284c7' : '#5c4125';
+      ctx.lineWidth = mode === 'resonance' ? 1.6 : 0.9;
+      ctx.stroke();
+    }
+  }
+
+  function drawHaeckelStipe(cx, cy, length) {
+    const baseY = cy + length;
+    const flutes = 10;
+    const topW = 15;
+    const botW = 26;
+
+    for (let f = 0; f < flutes; f++) {
+      const frac = f / (flutes - 1);
+      const xOffsetTop = (frac - 0.5) * topW * 2;
+      const xOffsetBot = (frac - 0.5) * botW * 2;
+
+      ctx.beginPath();
+      ctx.moveTo(cx + xOffsetTop, cy + 22);
+      ctx.bezierCurveTo(
+        cx + xOffsetTop * 0.85, cy + length * 0.4,
+        cx + xOffsetBot * 0.9, cy + length * 0.8,
+        cx + xOffsetBot, baseY
+      );
+      ctx.strokeStyle = mode === 'resonance' ? '#4f46e5' : '#3e2b1b';
+      ctx.lineWidth = (f === 0 || f === flutes - 1) ? 1.8 : 0.9;
+      ctx.stroke();
+    }
+
+    const girdles = 6;
+    for (let g = 1; g < girdles; g++) {
+      const gy = cy + (g / girdles) * length;
+      const gw = topW + (botW - topW) * (g / girdles);
+      ctx.beginPath();
+      ctx.ellipse(cx, gy, gw * 1.3, 4.0, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = mode === 'resonance' ? '#0891b2' : '#573f27';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  }
+
+  function drawHaeckelMycelium(cx, baseY) {
+    const rootCount = 10;
+    for (let i = 0; i < rootCount; i++) {
+      const dir = (i < rootCount / 2) ? -1 : 1;
+      const spread = ((i % (rootCount / 2)) + 1) * 34;
+      
+      ctx.beginPath();
+      ctx.moveTo(cx + dir * 14, baseY);
+      ctx.bezierCurveTo(
+        cx + dir * (spread * 0.5), baseY + 12,
+        cx + dir * (spread * 0.8), baseY + 38,
+        cx + dir * (spread * 1.25), baseY + 50
+      );
+      ctx.strokeStyle = mode === 'resonance' ? '#0284c7' : '#45311f';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      const bx = cx + dir * (spread * 1.25);
+      const by = baseY + 50;
+      ctx.beginPath();
+      ctx.arc(bx, by, 2.8, 0, Math.PI * 2);
+      ctx.fillStyle = mode === 'resonance' ? '#9333ea' : '#2b1b0e';
+      ctx.fill();
+    }
+  }
+
+  function drawPeripheralSpecimen(px, py, radius, symmetry, label) {
+    ctx.save();
+    ctx.translate(px, py);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = mode === 'resonance' ? '#4338ca' : '#533c27';
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.65, 0, Math.PI * 2);
+    ctx.setLineDash([2, 3]);
+    ctx.strokeStyle = '#8d7151';
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    for (let s = 0; s < symmetry; s++) {
+      const angle = (s / symmetry) * Math.PI * 2;
+      const x1 = Math.cos(angle) * (radius * 0.2);
+      const y1 = Math.sin(angle) * (radius * 0.2);
+      const x2 = Math.cos(angle) * (radius * 1.15);
+      const y2 = Math.sin(angle) * (radius * 1.15);
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = mode === 'resonance' ? '#0284c7' : '#3e2a18';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      const mx = Math.cos(angle) * (radius * 0.82);
+      const my = Math.sin(angle) * (radius * 0.82);
+      ctx.beginPath();
+      ctx.arc(mx, my, 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = mode === 'resonance' ? '#a855f7' : '#4a331f';
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.18, 0, Math.PI * 2);
+    ctx.fillStyle = mode === 'resonance' ? '#d97706' : '#2f2014';
+    ctx.fill();
+
+    ctx.restore();
+    ctx.font = 'italic 11px Georgia, serif';
+    ctx.fillStyle = '#614830';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, px, py + radius + 18);
+  }
+
+  function drawFigureLabels(cx, cy) {
+    ctx.font = 'bold 13px Georgia, serif';
+    ctx.fillStyle = '#3a2717';
+    ctx.textAlign = 'center';
+    ctx.fillText("Fig. 1", cx, cy + 175);
+    ctx.fillText("Fig. 2", cx, cy - 95);
+    ctx.fillText("Fig. 3", cx, cy + 280);
+  }
+
+  function loop() {
+    if (!animating) return;
+    animTime += 0.035;
+    drawPlate();
+    requestAnimationFrame(loop);
+  }
+
+  // Draw immediately on load
+  drawPlate();
+</script>
+
+</body>
+</html>

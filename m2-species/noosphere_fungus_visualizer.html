@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radiomyces noospheravorus - 全球意識流中新世沉降模擬器</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #02040a;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #webgl-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud * { pointer-events: auto; }
+
+    header {
+      top: 24px;
+      left: 28px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #f43f5e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+      letter-spacing: 2px;
+      margin-top: 5px;
+      font-family: monospace;
+    }
+    .panel {
+      background: rgba(10, 15, 30, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    #control-panel {
+      bottom: 25px;
+      left: 28px;
+      width: 380px;
+    }
+    #log-panel {
+      top: 24px;
+      right: 28px;
+      width: 380px;
+      max-height: 480px;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #93c5fd;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+    }
+    .ctrl-group {
+      margin-bottom: 14px;
+    }
+    .ctrl-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    .ctrl-val {
+      font-family: monospace;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    input[type=range] {
+      width: 100%;
+      height: 5px;
+      accent-color: #38bdf8;
+      background: #1e293b;
+      border-radius: 3px;
+      outline: none;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      padding: 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(56, 189, 248, 0.3);
+      color: #fff;
+    }
+    .btn.active {
+      background: #38bdf8;
+      color: #030a16;
+      border-color: #38bdf8;
+    }
+
+    /* Terminal Memory Stream Log */
+    #log-stream {
+      flex: 1;
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #94a3b8;
+      overflow-y: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      height: 230px;
+    }
+    .log-entry {
+      animation: fadeIn 0.3s ease-out;
+    }
+    .log-tag {
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    .log-content {
+      color: #e2e8f0;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .tele-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 6px;
+      padding: 10px;
+    }
+    .tele-title {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .tele-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: #38bdf8;
+      font-family: monospace;
+      margin-top: 2px;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div id="webgl-canvas"></div>
+
+  <header class="hud">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/>
+      </svg>
+      全球意識流中新世沉降模擬
+    </h1>
+    <div class="subtitle">TAXON: RADIOMYCES NOOSPHERAVORUS // 15.0 MA MIOCENE EPOCH</div>
+  </header>
+
+  <div id="log-panel" class="hud panel">
+    <div class="panel-title">菌絲體量子自旋記憶解碼流 (Terminal Human Archive)</div>
+    <div id="log-stream">
+      <!-- Dynamic stream logs -->
+    </div>
+
+    <div class="telemetry-grid">
+      <div class="tele-card">
+        <div class="tele-title">意識流折射波強</div>
+        <div class="tele-val" id="t-flux">-42.8 dBm</div>
+      </div>
+      <div class="tele-card">
+        <div class="tele-title">人類心智已存儲熵值</div>
+        <div class="tele-val" id="t-entropy">8.49 × 10¹² b</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="control-panel" class="hud panel">
+    <div class="panel-title">時空重疊與意識能量調諧</div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        <span>意識折射波段 (Noetic Sub-band)</span>
+        <span class="ctrl-val" id="v-band">哲學與超空間思維 (Cyan 42Hz)</span>
+      </div>
+      <input type="range" id="sl-band" min="1" max="4" step="1" value="1">
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        <span>海洋超空穴激盪強度 (Cavitation Flux)</span>
+        <span class="ctrl-val" id="v-cav">68% (MMCT 驟冷洋流)</span>
+      </div>
+      <input type="range" id="sl-cav" min="10" max="100" step="1" value="68">
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        <span>菌絲甲殼素記憶自旋寫入速率</span>
+        <span class="ctrl-val" id="v-write">3.2 GB/s</span>
+      </div>
+      <input type="range" id="sl-write" min="1" max="10" step="0.5" value="3.5">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn active" id="btn-stream">折射能量波層</button>
+      <button class="btn active" id="btn-sparks">聖艾爾摩電暈</button>
+      <button class="btn" id="btn-collapse">模擬精神引力塌縮脈衝</button>
+    </div>
+  </div>
+
+  <script>
+    // --- 3D Scene Initialization ---
+    const container = document.getElementById('webgl-canvas');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x020611, 0.02);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 120);
+    camera.position.set(0, 4.5, 9.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.minDistance = 3.5;
+    controls.maxDistance = 25;
+    controls.target.set(0, 1.8, 0);
+
+    // --- Lighting ---
+    const ambLight = new THREE.AmbientLight(0x0a1226, 1.8);
+    scene.add(ambLight);
+
+    const keyLight = new THREE.DirectionalLight(0x38bdf8, 2.2);
+    keyLight.position.set(6, 12, 6);
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0xec4899, 2.0);
+    rimLight.position.set(-6, 3, -6);
+    scene.add(rimLight);
+
+    const coreLight = new THREE.PointLight(0x38bdf8, 4, 10);
+    coreLight.position.set(0, 2.4, 0);
+    scene.add(coreLight);
+
+    // --- Miocene Substrate: Primeval Basalt with Frost & Cavitation Mist ---
+    const rockGeo = new THREE.CylinderGeometry(5.2, 5.8, 0.3, 64);
+    const rockMat = new THREE.MeshStandardMaterial({
+      color: 0x070c18,
+      roughness: 0.85,
+      metalness: 0.3
+    });
+    const rockMesh = new THREE.Mesh(rockGeo, rockMat);
+    rockMesh.position.y = -0.15;
+    scene.add(rockMesh);
+
+    // Grid representing geomagnetic latitude
+    const grid = new THREE.GridHelper(18, 36, 0x38bdf8, 0x1e293b);
+    grid.position.y = 0.01;
+    scene.add(grid);
+
+    // --- Haeckelian Organism Construction (*Radiomyces noospheravorus*) ---
+    const organismGroup = new THREE.Group();
+    scene.add(organismGroup);
+
+    // Materials
+    const bioMelaninMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a,
+      roughness: 0.25,
+      metalness: 0.9,
+      emissive: 0x040817,
+      emissiveIntensity: 0.5
+    });
+
+    const laceGlowMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      emissive: 0x0284c7,
+      emissiveIntensity: 2.2,
+      roughness: 0.15,
+      metalness: 0.6
+    });
+
+    const quartzSpireMat = new THREE.MeshStandardMaterial({
+      color: 0xfef08a,
+      emissive: 0xf59e0b,
+      emissiveIntensity: 1.8,
+      roughness: 0.1,
+      metalness: 0.95
+    });
+
+    // 1. Central Stem (Waveguide Column)
+    const stemCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0.06, 0.9, 0.03),
+      new THREE.Vector3(-0.04, 1.8, -0.02),
+      new THREE.Vector3(0, 2.3, 0)
+    ]);
+    const stemGeo = new THREE.TubeGeometry(stemCurve, 32, 0.22, 16, false);
+    const stemMesh = new THREE.Mesh(stemGeo, bioMelaninMat);
+    organismGroup.add(stemMesh);
+
+    // Internal Coaxial Conduits (Helical myelin-like conductors)
+    const coilPts = [];
+    for (let i = 0; i <= 160; i++) {
+      const t = i / 160;
+      const angle = t * Math.PI * 2 * 6;
+      const r = 0.26 - t * 0.05;
+      const p = stemCurve.getPoint(t);
+      coilPts.push(new THREE.Vector3(
+        p.x + Math.cos(angle) * r,
+        p.y,
+        p.z + Math.sin(angle) * r
+      ));
+    }
+    const coilMesh = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(coilPts), 120, 0.025, 8, false),
+      laceGlowMat
+    );
+    organismGroup.add(coilMesh);
+
+    // 2. Parabolic Reflector Cap (Haeckel Multi-Tiered Radiolarian Lace Dish)
+    const capPts = [];
+    for (let i = 0; i <= 28; i++) {
+      const t = i / 28;
+      const r = 1.45 * Math.pow(t, 0.65);
+      const y = -0.52 * (1 - Math.pow(t, 2));
+      capPts.push(new THREE.Vector2(r, y));
+    }
+    const dishCap = new THREE.Mesh(new THREE.LatheGeometry(capPts, 36), bioMelaninMat);
+    dishCap.position.set(0, 2.45, 0);
+    organismGroup.add(dishCap);
+
+    // Concentric Geodesic Resonator Rings (Fresnel Pores)
+    const ringsGroup = new THREE.Group();
+    for (let r = 0.35; r <= 1.35; r += 0.28) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(r, 0.022, 8, 48),
+        laceGlowMat
+      );
+      ring.rotateX(Math.PI / 2);
+      ring.position.y = -0.25 + (r * 0.12);
+      ringsGroup.add(ring);
+    }
+    dishCap.add(ringsGroup);
+
+    // Radial Haeckelian Struts (18 flying buttresses)
+    const struts = 18;
+    for (let s = 0; s < struts; s++) {
+      const angle = (s / struts) * Math.PI * 2;
+      const fin = new THREE.Mesh(
+        new THREE.BoxGeometry(0.018, 0.22, 1.05),
+        bioMelaninMat
+      );
+      fin.position.set(Math.cos(angle) * 0.58, -0.16, Math.sin(angle) * 0.58);
+      fin.rotation.y = -angle;
+      dishCap.add(fin);
+    }
+
+    // 3. Apical Monopole Spire (Celestite Crystal Needle)
+    const spireMesh = new THREE.Mesh(
+      new THREE.ConeGeometry(0.065, 1.15, 16),
+      quartzSpireMat
+    );
+    spireMesh.position.set(0, 0.58, 0);
+    dishCap.add(spireMesh);
+
+    // Saint Elmo's Fire Corona Orb at Spire Apex
+    const coronaOrb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 16, 16),
+      laceGlowMat
+    );
+    coronaOrb.position.set(0, 1.15, 0);
+    dishCap.add(coronaOrb);
+
+    // --- Subterranean Chitin-Melanin Mycelium Memory Network ---
+    const myceliumGroup = new THREE.Group();
+    scene.add(myceliumGroup);
+
+    const hyphaeLineMat = new THREE.LineBasicMaterial({
+      color: 0x38bdf8,
+      linewidth: 2,
+      transparent: true,
+      opacity: 0.85
+    });
+
+    const hyphaeNodeMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9 });
+
+    function growBranch(start, dir, len, depth) {
+      if (depth > 4 || len < 0.2) return;
+      const end = start.clone().add(dir.clone().multiplyScalar(len));
+      end.y = 0.015;
+
+      const geo = new THREE.BufferGeometry().setFromPoints([start, end]);
+      myceliumGroup.add(new THREE.Line(geo, hyphaeLineMat));
+
+      // Spore/Memory Node
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), hyphaeNodeMat);
+      dot.position.copy(end);
+      myceliumGroup.add(dot);
+
+      // Branching
+      for (let i = 0; i < 2; i++) {
+        const angle = (i === 0 ? 0.45 : -0.45) + (Math.random() - 0.5) * 0.3;
+        const newDir = dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+        growBranch(end, newDir, len * 0.72, depth + 1);
+      }
+    }
+
+    for (let r = 0; r < 8; r++) {
+      const th = (r / 8) * Math.PI * 2;
+      const st = new THREE.Vector3(Math.cos(th) * 0.2, 0.015, Math.sin(th) * 0.2);
+      const dr = new THREE.Vector3(Math.cos(th), 0, Math.sin(th));
+      growBranch(st, dr, 0.95, 1);
+    }
+
+    // --- Synaptic Data Packets Flowing Down into the Mycelium Database ---
+    const dataPacketsCount = 80;
+    const packetGeo = new THREE.BufferGeometry();
+    const packetPos = new Float32Array(dataPacketsCount * 3);
+    const packetT = new Float32Array(dataPacketsCount); // 0.0 (top) to 1.0 (subterranean)
+
+    for (let i = 0; i < dataPacketsCount; i++) {
+      packetT[i] = Math.random();
+    }
+    packetGeo.setAttribute('position', new THREE.BufferAttribute(packetPos, 3));
+
+    const packetMat = new THREE.PointsMaterial({
+      color: 0x38bdf8,
+      size: 0.12,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.9
+    });
+    const packetSystem = new THREE.Points(packetGeo, packetMat);
+    scene.add(packetSystem);
+
+    // --- Atmospheric Quantum Thermal Fog & Refracted Consciousness Waves ---
+    const waveCount = 5;
+    const waveMeshes = [];
+    const waveGeo = new THREE.SphereGeometry(1, 36, 24);
+
+    for (let w = 0; w < waveCount; w++) {
+      const wMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.2
+      });
+      const waveM = new THREE.Mesh(waveGeo, wMat);
+      waveM.position.set(0, 2.45, 0);
+      const initR = 1.2 + w * 0.9;
+      waveM.scale.set(initR, initR, initR);
+      scene.add(waveM);
+      waveMeshes.push({ mesh: waveM, r: initR });
+    }
+
+    // --- Interactive State & Controls ---
+    let currentBand = 1;
+    let cavIntensity = 0.68;
+    let writeSpeed = 3.5;
+    let collapseShock = 0.0;
+    let showWaves = true;
+    let showSparks = true;
+
+    const slBand = document.getElementById('sl-band');
+    const slCav = document.getElementById('sl-cav');
+    const slWrite = document.getElementById('sl-write');
+    const vBand = document.getElementById('v-band');
+    const vCav = document.getElementById('v-cav');
+    const vWrite = document.getElementById('v-write');
+    const btnStream = document.getElementById('btn-stream');
+    const btnSparks = document.getElementById('btn-sparks');
+    const btnCollapse = document.getElementById('btn-collapse');
+    const logStream = document.getElementById('log-stream');
+    const tFlux = document.getElementById('t-flux');
+    const tEntropy = document.getElementById('t-entropy');
+
+    const bands = [
+      { name: "哲學與超空間思維 (Cyan 42Hz)", hex: 0x38bdf8 },
+      { name: "語言與符號全息庫 (Amber 12Hz)", hex: 0xf59e0b },
+      { name: "原始感官與恐懼全景 (Magenta 85Hz)", hex: 0xec4899 },
+      { name: "中新世空穴量子熱噪 (Violet 120Hz)", hex: 0xa855f7 }
+    ];
+
+    function applyBand(idx) {
+      const b = bands[idx - 1];
+      vBand.textContent = b.name;
+      const c = new THREE.Color(b.hex);
+
+      laceGlowMat.color.copy(c);
+      laceGlowMat.emissive.copy(c);
+      hyphaeLineMat.color.copy(c);
+      hyphaeNodeMat.color.copy(c);
+      packetMat.color.copy(c);
+      coreLight.color.copy(c);
+      keyLight.color.copy(c);
+      waveMeshes.forEach(wm => wm.mesh.material.color.copy(c));
+    }
+
+    slBand.oninput = (e) => {
+      currentBand = parseInt(e.target.value);
+      applyBand(currentBand);
+    };
+
+    slCav.oninput = (e) => {
+      cavIntensity = parseFloat(e.target.value) / 100;
+      vCav.textContent = `${Math.round(cavIntensity * 100)}% (MMCT 驟冷洋流)`;
+      scene.fog.density = 0.012 + cavIntensity * 0.02;
+    };
+
+    slWrite.oninput = (e) => {
+      writeSpeed = parseFloat(e.target.value);
+      vWrite.textContent = `${writeSpeed.toFixed(1)} GB/s`;
+    };
+
+    btnStream.onclick = () => {
+      showWaves = !showWaves;
+      btnStream.classList.toggle('active', showWaves);
+      waveMeshes.forEach(wm => wm.mesh.visible = showWaves);
+    };
+
+    btnSparks.onclick = () => {
+      showSparks = !showSparks;
+      btnSparks.classList.toggle('active', showSparks);
+      coronaOrb.visible = showSparks;
+    };
+
+    btnCollapse.onclick = () => {
+      collapseShock = 1.0;
+      addLogEntry("0xFF-COLLAPSE", "高維精神引力塌縮波前抵達！質能瞬間歸零，大洋空穴內爆！");
+    };
+
+    // Terminal Log Stream Generator
+    const simulatedHumanMemories = [
+      "解碼自滅絕個體 #7,109,241: 「我們曾在藍色海邊仰望繁星」",
+      "語言語義向量 [Love / 記憶] 轉化為甲殼素自旋格點...",
+      "捕獲大腦皮層最後運動神經瞬變：逃避高維重疊盲區失敗",
+      "哲學命題「我思故我在」經由拋物反射碟沉降至地下菌絲網",
+      "水下超空穴海嘯激盪：古特提斯洋流閉合，南極大冰蓋永久鎖定",
+      "感官音頻全景「巴赫平均律賦格」編碼入第 42 黑色素結節",
+      "高階 Gamma 認知同步波解調完畢：能量轉化跨膜電位 +520mV",
+      "終焉生物廣播衰減中... 菌絲體正式接管行星全部資訊沉積"
+    ];
+
+    let logCounter = 0;
+    function addLogEntry(tag, text) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `<span class="log-tag">[${tag}]</span> <span class="log-content">${text}</span>`;
+      logStream.appendChild(entry);
+      if (logStream.children.length > 9) {
+        logStream.removeChild(logStream.children[0]);
+      }
+    }
+
+    setInterval(() => {
+      const randMem = simulatedHumanMemories[Math.floor(Math.random() * simulatedHumanMemories.length)];
+      const hexTag = "0x" + Math.floor(Math.random() * 0xFF).toString(16).toUpperCase().padStart(2, '0');
+      addLogEntry(hexTag, randMem);
+
+      // Dynamic telemetry
+      const flux = (-40 - Math.random() * 8 + collapseShock * 15).toFixed(1);
+      tFlux.textContent = `${flux} dBm`;
+      const ent = (8.49 + logCounter * 0.02).toFixed(2);
+      tEntropy.textContent = `${ent} × 10¹² b`;
+      logCounter++;
+    }, 2400);
+
+    // Initial logs
+    addLogEntry("0x01-INIT", "1500 萬年中新世空穴重疊點錨定完成");
+    addLogEntry("0x02-RECV", "噬識輻射菌 (Radiomyces noospheravorus) 天線就緒");
+
+    // --- Animation Loop ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+
+      // Fungus Gentle Respiration
+      const respiration = Math.sin(elapsed * 2.8) * 0.02;
+      dishCap.position.y = 2.45 + respiration;
+      dishCap.rotation.y = Math.sin(elapsed * 0.6) * 0.04;
+
+      // Collapse Shock Decay
+      if (collapseShock > 0.01) {
+        collapseShock *= 0.95;
+        coronaOrb.scale.setScalar(1 + collapseShock * 5);
+        coreLight.intensity = 4 + collapseShock * 12;
+      } else {
+        coronaOrb.scale.setScalar(1 + Math.sin(elapsed * 14) * 0.18);
+      }
+
+      // Synaptic Data Packets Animation (Flowing from dish apex down into roots)
+      const positions = packetSystem.geometry.attributes.position.array;
+      for (let i = 0; i < dataPacketsCount; i++) {
+        packetT[i] += 0.008 * (writeSpeed / 3.0);
+        if (packetT[i] > 1.0) packetT[i] = 0.0;
+
+        const t = packetT[i];
+        const idx = i * 3;
+
+        if (t < 0.3) {
+          // Entering through cap dish
+          const normT = t / 0.3;
+          const r = (1 - normT) * 1.35;
+          const angle = i * 0.8 + elapsed * 1.5;
+          positions[idx] = Math.cos(angle) * r;
+          positions[idx + 1] = 2.45 - (normT * 0.2);
+          positions[idx + 2] = Math.sin(angle) * r;
+        } else if (t < 0.7) {
+          // Traveling down the stem column
+          const normT = (t - 0.3) / 0.4;
+          const stemPt = stemCurve.getPoint(1 - normT);
+          positions[idx] = stemPt.x + Math.sin(elapsed * 6 + i) * 0.08;
+          positions[idx + 1] = stemPt.y;
+          positions[idx + 2] = stemPt.z + Math.cos(elapsed * 6 + i) * 0.08;
+        } else {
+          // Dispersing into substrate mycelium roots
+          const normT = (t - 0.7) / 0.3;
+          const angle = (i % 8) * (Math.PI / 4);
+          const dist = 0.3 + normT * 2.8;
+          positions[idx] = Math.cos(angle) * dist;
+          positions[idx + 1] = 0.02;
+          positions[idx + 2] = Math.sin(angle) * dist;
+        }
+      }
+      packetSystem.geometry.attributes.position.needsUpdate = true;
+
+      // Inward Atmospheric Consciousness Waves
+      if (showWaves) {
+        waveMeshes.forEach((wm, idx) => {
+          wm.r -= 0.02 * (1 + collapseShock * 2);
+          if (wm.r < 0.3) wm.r = 4.8;
+          wm.mesh.scale.set(wm.r, wm.r, wm.r);
+          const norm = (wm.r - 0.3) / 4.5;
+          wm.mesh.material.opacity = Math.sin(norm * Math.PI) * 0.35;
+        });
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kunstformen der Natur - Tafel 103: Rhizomorpha (純真菌手繪石版畫)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background-color: #e6dcce;
+      background-image: 
+        radial-gradient(#d3c5b4 12%, transparent 13%),
+        radial-gradient(#ded1c0 12%, transparent 13%);
+      background-size: 32px 32px;
+      background-position: 0 0, 16px 16px;
+      color: #2c2219;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* Antique Lithographic Paper Sheet */
+    .plate-wrapper {
+      position: relative;
+      background: #fbf7ee;
+      box-shadow: 
+        0 20px 50px rgba(60, 45, 30, 0.28),
+        0 0 0 1px #cfbe9e,
+        inset 0 0 80px rgba(200, 175, 130, 0.22);
+      border-radius: 4px;
+      max-width: 1020px;
+      width: 100%;
+      padding: 38px 48px;
+      border: 1px solid #cbb892;
+    }
+
+    /* Antique Ornamental Plate Border */
+    .plate-border {
+      border: 2px solid #54402d;
+      padding: 6px;
+      outline: 1px solid #947b5c;
+      outline-offset: 4px;
+      position: relative;
+    }
+
+    .plate-header {
+      text-align: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #cfbfa7;
+      padding-bottom: 14px;
+    }
+
+    .series-title {
+      font-size: 13px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #7a6349;
+      margin-bottom: 4px;
+    }
+
+    .plate-number {
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #2b1f14;
+    }
+
+    .taxon-name {
+      font-style: italic;
+      font-size: 30px;
+      color: #3b2816;
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .german-title {
+      font-size: 13px;
+      letter-spacing: 2.5px;
+      color: #6a533b;
+      margin-top: 3px;
+      text-transform: uppercase;
+    }
+
+    /* Main Graphical Canvas Layout */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 660px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0;
+      background: #fbf7ee;
+      border: 1px solid #e5d8c3;
+      border-radius: 4px;
+    }
+
+    #haeckel-canvas {
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+      display: block;
+    }
+
+    /* Plate Footer Explanations */
+    .plate-footer {
+      border-top: 1px solid #cfbfa7;
+      margin-top: 18px;
+      padding-top: 16px;
+    }
+
+    .figure-legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #4a3b2c;
+    }
+
+    .fig-item strong {
+      font-size: 13px;
+      color: #26190e;
+      letter-spacing: 0.5px;
+    }
+
+    .controls-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(85, 65, 45, 0.06);
+      border: 1px dashed #bda787;
+      border-radius: 6px;
+      padding: 10px 18px;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toggle-btn {
+      background: #f4ebd9;
+      border: 1px solid #8e7354;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #3b2816;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: #3e2d1c;
+      color: #fbf7ee;
+      border-color: #26190e;
+    }
+
+    .toggle-btn:hover {
+      background: #eadbbd;
+    }
+
+    .mode-tag {
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      color: #6a533b;
+    }
+  </style>
+</head>
+<body>
+
+<div class="plate-wrapper">
+  <div class="plate-border">
+    
+    <header class="plate-header">
+      <div class="series-title">Ernst Haeckel: Kunstformen der Natur (1904) // Supplementum</div>
+      <div class="plate-number">Tafel 103. — RHIZOMORPHA.</div>
+      <div class="taxon-name">Radiomyces noospheravorus (Haeckel, 1904)</div>
+      <div class="german-title">Fadenschwamm-Kranz — 噬電真菌原生體（純菌絲與菌索形態）</div>
+    </header>
+
+    <div class="canvas-container">
+      <canvas id="haeckel-canvas" width="920" height="660"></canvas>
+    </div>
+
+    <div class="controls-strip">
+      <div class="mode-tag">手繪圖版顯像模式 (LITHOGRAPHISCHE MODUS)：</div>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn-etching">古典銅版蝕刻墨線 (Sepia Copperplate)</button>
+        <button class="toggle-btn" id="btn-cytoplasm">活體細胞質電位流 (Cytoplasmic Aura)</button>
+        <button class="toggle-btn" id="btn-dielectric">吐水滴介電透鏡場線 (Guttation Field)</button>
+      </div>
+      <div style="font-size: 12px; color: #7a6348; font-style: italic;">
+        點擊模式按鈕檢視海克爾古典博物學生理圖解
+      </div>
+    </div>
+
+    <footer class="plate-footer">
+      <div class="figure-legend">
+        <div class="fig-item">
+          <strong>Fig. 1. Thallus mit Rhizomorphen (原生體全景)</strong><br>
+          絕無傘菌構造。主體為匍匐在古岩上的天鵝絨菌絲氈，向外伸展粗壯分叉的黑色導電菌索（Rhizomorpha），並向上生長出鹿角狀分生孢子梗。
+        </div>
+        <div class="fig-item">
+          <strong>Fig. 2. Querschnitt der Rhizomorpha (菌索橫切面)</strong><br>
+          微觀細胞管束結構。外層為黑色素化甲殼素皮層，內部密布同軸髓鞘菌絲管束，負責輸送細胞質液並傳導電磁感應電位。
+        </div>
+        <div class="fig-item">
+          <strong>Fig. 3. Guttationstropfen (吐水滴介電透鏡)</strong><br>
+          真菌生理吐水液滴。一顆顆晶瑩凝結於菌索結節上的高離子水珠，如同微型介電透鏡，將大氣弱電磁波折射導入體內。
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('haeckel-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let mode = 'etching'; // 'etching', 'cytoplasm', 'dielectric'
+
+  const btnEtching = document.getElementById('btn-etching');
+  const btnCytoplasm = document.getElementById('btn-cytoplasm');
+  const btnDielectric = document.getElementById('btn-dielectric');
+
+  btnEtching.onclick = () => {
+    mode = 'etching';
+    setActiveBtn(btnEtching);
+    drawHaeckelPlate();
+  };
+
+  btnCytoplasm.onclick = () => {
+    mode = 'cytoplasm';
+    setActiveBtn(btnCytoplasm);
+    drawHaeckelPlate();
+  };
+
+  btnDielectric.onclick = () => {
+    mode = 'dielectric';
+    setActiveBtn(btnDielectric);
+    drawHaeckelPlate();
+  };
+
+  function setActiveBtn(btn) {
+    [btnEtching, btnCytoplasm, btnDielectric].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // --- Hand-Drawn Engraving Engine ---
+
+  function drawHaeckelPlate() {
+    ctx.fillStyle = '#fbf7ee';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height * 0.48;
+
+    // 1. Draw Peripheral Anatomical Figures (Fig. 2, Fig. 3, Fig. 4, Fig. 5)
+    drawMicroscopicCrossSection(140, 140, 52, "Fig. 2. Querschnitt der Rhizomorpha");
+    drawGuttationDiagram(780, 140, 52, "Fig. 3. Guttationstropfen-Fokus");
+    drawSporeLattice(140, 510, 48, "Fig. 4. Spore mit Spin-Gitter");
+    drawAntlerConidiophoreTip(780, 510, 55, "Fig. 5. Conidiophor-Apex");
+
+    // 2. Draw Central Sprawling Fungal Organism (Fig. 1)
+    drawMainFungalThallus(cx, cy);
+
+    // 3. Draw Haeckel-Style Figure Annotations
+    drawFigureLabels(cx, cy);
+  }
+
+  // --- Draw Central True Fungus Organism (Fig. 1) ---
+  function drawMainFungalThallus(cx, cy) {
+    // A. Central Creeping Velvet Felt Cushion (Thallus Stroma)
+    drawCentralStroma(cx, cy);
+
+    // B. Crawling Branching Rhizomorphic Cords (Muscular mycelial ropes)
+    drawHandDrawnRhizomorphCords(cx, cy);
+
+    // C. Vertical Clavaria/Xylaria-like Antler Tendrils (Dendritic Conidiophores)
+    drawAntlerTendrilCluster(cx, cy);
+
+    // D. Guttation Dew Droplets (Engraved Water Beads)
+    drawGuttationBeads(cx, cy);
+  }
+
+  function drawCentralStroma(cx, cy) {
+    ctx.save();
+    // Fleshy organic irregular shape
+    ctx.beginPath();
+    const rBase = 110;
+    const lobeCount = 12;
+    for (let i = 0; i <= lobeCount; i++) {
+      const theta = (i / lobeCount) * Math.PI * 2;
+      const r = rBase + Math.sin(theta * 4) * 18 + Math.cos(theta * 3) * 12;
+      const x = cx + Math.cos(theta) * r;
+      const y = cy + 20 + Math.sin(theta) * (r * 0.65);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+
+    // Soft sepia wash
+    ctx.fillStyle = mode === 'cytoplasm' ? 'rgba(16, 185, 129, 0.22)' : 'rgba(74, 53, 33, 0.12)';
+    ctx.fill();
+    ctx.strokeStyle = '#3d2b1b';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    // Hand-drawn engraving stippling and micro-hatching across stroma surface
+    const stippleCount = 140;
+    for (let s = 0; s < stippleCount; s++) {
+      const a = Math.random() * Math.PI * 2;
+      const d = Math.random() * 85;
+      const px = cx + Math.cos(a) * d;
+      const py = cy + 20 + Math.sin(a) * (d * 0.65);
+
+      ctx.beginPath();
+      ctx.arc(px, py, 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = '#4a3622';
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawHandDrawnRhizomorphCords(cx, cy) {
+    // 10 major branching rhizomorph trunks spreading in all directions
+    const cordPaths = [
+      // Left sprawling cords
+      [ [cx - 40, cy + 20], [cx - 110, cy + 35], [cx - 200, cy + 70], [cx - 310, cy + 120] ],
+      [ [cx - 30, cy + 40], [cx - 90, cy + 90], [cx - 170, cy + 150], [cx - 260, cy + 210] ],
+      [ [cx - 50, cy - 10], [cx - 140, cy - 30], [cx - 230, cy - 40], [cx - 320, cy - 30] ],
+      [ [cx - 20, cy - 30], [cx - 80, cy - 80], [cx - 160, cy - 130], [cx - 240, cy - 170] ],
+      
+      // Right sprawling cords
+      [ [cx + 40, cy + 20], [cx + 120, cy + 30], [cx + 210, cy + 65], [cx + 320, cy + 115] ],
+      [ [cx + 30, cy + 40], [cx + 95, cy + 85], [cx + 180, cy + 145], [cx + 270, cy + 205] ],
+      [ [cx + 50, cy - 10], [cx + 135, cy - 25], [cx + 225, cy - 35], [cx + 315, cy - 25] ],
+      [ [cx + 20, cy - 30], [cx + 85, cy - 85], [cx + 165, cy - 135], [cx + 245, cy - 175] ],
+
+      // Up and down searching cords
+      [ [cx - 10, cy + 60], [cx - 20, cy + 120], [cx - 30, cy + 180], [cx - 40, cy + 235] ],
+      [ [cx + 15, cy + 60], [cx + 35, cy + 125], [cx + 50, cy + 185], [cx + 70, cy + 240] ]
+    ];
+
+    cordPaths.forEach((pts, idx) => {
+      drawEngravedCord(pts, idx);
+    });
+  }
+
+  function drawEngravedCord(pts, seed) {
+    ctx.save();
+
+    // Mode-specific Aura
+    if (mode === 'cytoplasm') {
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i][0], pts[i][1]);
+      }
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.45)';
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    } else if (mode === 'dielectric') {
+      // Draw faint dashed field lines entering the cord
+      ctx.setLineDash([2, 4]);
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+      ctx.lineWidth = 0.9;
+      for (let k = 1; k < pts.length; k++) {
+        const mx = pts[k][0];
+        const my = pts[k][1];
+        ctx.beginPath();
+        ctx.moveTo(mx, my - 22);
+        ctx.lineTo(mx, my);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+
+    // Outer cord contour
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) {
+      ctx.lineTo(pts[i][0], pts[i][1]);
+    }
+    ctx.strokeStyle = '#2d1e11';
+    ctx.lineWidth = 3.6;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Internal copperplate hatching lines along cord curvature
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const dx = p2[0] - p1[0];
+      const dy = p2[1] - p1[1];
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const steps = Math.floor(len / 4);
+
+      for (let s = 0; s < steps; s++) {
+        const t = s / steps;
+        const x = p1[0] + dx * t;
+        const y = p1[1] + dy * t;
+        const nx = -dy / len;
+        const ny = dx / len;
+        const hatchLen = 3.5 * (1 - (i / pts.length) * 0.4);
+
+        ctx.beginPath();
+        ctx.moveTo(x - nx * hatchLen, y - ny * hatchLen);
+        ctx.lineTo(x + nx * hatchLen, y + ny * hatchLen);
+        ctx.strokeStyle = '#4a3421';
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+      }
+    }
+
+    // Side branching delicate mycelial threads (Sub-rootlets)
+    const endPt = pts[pts.length - 1];
+    const prevPt = pts[pts.length - 2];
+    const angle = Math.atan2(endPt[1] - prevPt[1], endPt[0] - prevPt[0]);
+
+    for (let r = -2; r <= 2; r++) {
+      const a = angle + r * 0.35;
+      ctx.beginPath();
+      ctx.moveTo(endPt[0], endPt[1]);
+      ctx.quadraticCurveTo(
+        endPt[0] + Math.cos(a) * 20,
+        endPt[1] + Math.sin(a) * 20,
+        endPt[0] + Math.cos(a) * 38,
+        endPt[1] + Math.sin(a) * 38
+      );
+      ctx.strokeStyle = '#5a3f27';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawAntlerTendrilCluster(cx, cy) {
+    // Upright forked Clavarioid / Xylaria-like tendrils rising from central mat
+    const tendrilConfigs = [
+      { x: cx - 18, y: cy + 10, h: 140, scale: 1.0, angle: -0.08 },
+      { x: cx + 22, y: cy + 8, h: 130, scale: 0.92, angle: 0.12 },
+      { x: cx - 55, y: cy + 18, h: 105, scale: 0.82, angle: -0.22 },
+      { x: cx + 58, y: cy + 15, h: 110, scale: 0.85, angle: 0.25 },
+      { x: cx, y: cy + 25, h: 160, scale: 1.15, angle: 0.02 }
+    ];
+
+    tendrilConfigs.forEach(cfg => {
+      drawSingleAntlerTendril(cfg);
+    });
+  }
+
+  function drawSingleAntlerTendril(cfg) {
+    ctx.save();
+    ctx.translate(cfg.x, cfg.y);
+    ctx.rotate(cfg.angle);
+
+    const H = cfg.h;
+
+    // Glowing core in cytoplasm mode
+    if (mode === 'cytoplasm') {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -H);
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.4)';
+      ctx.lineWidth = 14;
+      ctx.stroke();
+    }
+
+    // Main column body (tapering upwards)
+    ctx.beginPath();
+    ctx.moveTo(-7 * cfg.scale, 0);
+    ctx.quadraticCurveTo(-8 * cfg.scale, -H * 0.4, -4 * cfg.scale, -H * 0.7);
+    ctx.lineTo(0, -H);
+    ctx.lineTo(4 * cfg.scale, -H * 0.7);
+    ctx.quadraticCurveTo(8 * cfg.scale, -H * 0.4, 7 * cfg.scale, 0);
+    ctx.closePath();
+
+    ctx.fillStyle = mode === 'cytoplasm' ? 'rgba(5, 150, 105, 0.25)' : 'rgba(60, 42, 26, 0.16)';
+    ctx.fill();
+    ctx.strokeStyle = '#2b1c0e';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Cross-hatching shading on tendril sides
+    for (let y = -10; y > -H * 0.8; y -= 6) {
+      const frac = -y / H;
+      const w = (7 * (1 - frac * 0.4)) * cfg.scale;
+      ctx.beginPath();
+      ctx.moveTo(-w, y);
+      ctx.lineTo(w, y);
+      ctx.strokeStyle = '#4a3522';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+
+    // Forked antler tips
+    for (let fork = -1; fork <= 1; fork += 2) {
+      const fx = fork * 16 * cfg.scale;
+      const fy = -H - 26 * cfg.scale;
+      ctx.beginPath();
+      ctx.moveTo(0, -H * 0.85);
+      ctx.quadraticCurveTo(fork * 6, -H, fx, fy);
+      ctx.strokeStyle = '#2b1c0e';
+      ctx.lineWidth = 2.0;
+      ctx.stroke();
+
+      // Micro-conidial spore nodule at tip
+      ctx.beginPath();
+      ctx.arc(fx, fy, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = mode === 'cytoplasm' ? '#10b981' : '#3d2919';
+      ctx.fill();
+      ctx.strokeStyle = '#1f1309';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawGuttationBeads(cx, cy) {
+    // Engraved dew-like guttation beads resting on stroma and cords
+    const beads = [
+      { x: cx - 25, y: cy - 40, r: 5.5 },
+      { x: cx + 32, y: cy - 35, r: 6.0 },
+      { x: cx - 70, y: cy + 10, r: 7.2 },
+      { x: cx + 75, y: cy + 5, r: 6.8 },
+      { x: cx - 110, y: cy + 42, r: 5.0 },
+      { x: cx + 115, y: cy + 38, r: 5.2 },
+      { x: cx - 15, y: cy + 45, r: 8.0 },
+      { x: cx + 20, y: cy + 52, r: 7.5 },
+      { x: cx - 170, y: cy + 85, r: 4.8 },
+      { x: cx + 180, y: cy + 80, r: 4.5 }
+    ];
+
+    beads.forEach(b => {
+      ctx.save();
+      ctx.translate(b.x, b.y);
+
+      if (mode === 'dielectric') {
+        // Faint concentric dielectric refractive rings
+        ctx.beginPath();
+        ctx.arc(0, 0, b.r * 2.2, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.setLineDash([2, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Drop body
+      ctx.beginPath();
+      ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+      ctx.fillStyle = mode === 'cytoplasm' ? 'rgba(52, 211, 153, 0.85)' : '#f3ebd8';
+      ctx.fill();
+      ctx.strokeStyle = '#2b1b0d';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+
+      // Engraved shadow crescent inside droplet
+      ctx.beginPath();
+      ctx.arc(b.r * 0.25, b.r * 0.25, b.r * 0.65, 0, Math.PI);
+      ctx.strokeStyle = '#614930';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+
+      // Sharp ink specular reflection dot
+      ctx.beginPath();
+      ctx.arc(-b.r * 0.35, -b.r * 0.35, b.r * 0.25, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+
+      ctx.restore();
+    });
+  }
+
+  // --- Peripheral Microscopic Anatomical Drawings ---
+
+  function drawMicroscopicCrossSection(px, py, radius, label) {
+    ctx.save();
+    ctx.translate(px, py);
+
+    // Outer cord border
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = '#2b1b0e';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    // Concentric melanized hyphal sheath layers
+    for (let r = radius - 8; r >= 12; r -= 10) {
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = '#5a4128';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+
+      // Radial cellular septa lines
+      const cells = Math.floor(r * 0.8);
+      for (let c = 0; c < cells; c++) {
+        const theta = (c / cells) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(theta) * r, Math.sin(theta) * r);
+        ctx.lineTo(Math.cos(theta) * (r + 8), Math.sin(theta) * (r + 8));
+        ctx.strokeStyle = '#735639';
+        ctx.lineWidth = 0.7;
+        ctx.stroke();
+      }
+    }
+
+    // Central conducting core
+    ctx.beginPath();
+    ctx.arc(0, 0, 10, 0, Math.PI * 2);
+    ctx.fillStyle = mode === 'cytoplasm' ? '#10b981' : '#3d2817';
+    ctx.fill();
+
+    ctx.restore();
+    ctx.font = 'italic 11px Georgia, serif';
+    ctx.fillStyle = '#5c452e';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, px, py + radius + 18);
+  }
+
+  function drawGuttationDiagram(px, py, radius, label) {
+    ctx.save();
+    ctx.translate(px, py);
+
+    // Substrate hypha
+    ctx.beginPath();
+    ctx.moveTo(-radius * 1.1, 15);
+    ctx.lineTo(radius * 1.1, 15);
+    ctx.strokeStyle = '#2d1e11';
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+
+    // Large Guttation Droplet
+    ctx.beginPath();
+    ctx.arc(0, -6, radius * 0.65, 0, Math.PI * 2);
+    ctx.fillStyle = mode === 'cytoplasm' ? 'rgba(16, 185, 129, 0.4)' : '#f5eedc';
+    ctx.fill();
+    ctx.strokeStyle = '#26170a';
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+
+    // Incoming EM wave refraction rays
+    const rays = 6;
+    for (let r = 0; r < rays; r++) {
+      const frac = (r / (rays - 1)) - 0.5;
+      const inX = frac * radius * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(inX, -radius);
+      ctx.lineTo(inX * 0.5, -6);
+      ctx.lineTo(0, 15); // Focused into hypha
+      ctx.strokeStyle = mode === 'dielectric' ? '#0284c7' : '#6b5034';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+    ctx.font = 'italic 11px Georgia, serif';
+    ctx.fillStyle = '#5c452e';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, px, py + radius + 18);
+  }
+
+  function drawSporeLattice(px, py, radius, label) {
+    ctx.save();
+    ctx.translate(px, py);
+
+    // Spore wall
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = '#2c1c0e';
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+
+    // Hexagonal internal spin storage matrix
+    for (let a = 0; a < 6; a++) {
+      const theta = (a / 6) * Math.PI * 2;
+      const x = Math.cos(theta) * (radius * 0.6);
+      const y = Math.sin(theta) * (radius * 0.6);
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#7c5e3f';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = mode === 'cytoplasm' ? '#10b981' : '#3d2b1b';
+      ctx.fill();
+    }
+
+    ctx.restore();
+    ctx.font = 'italic 11px Georgia, serif';
+    ctx.fillStyle = '#5c452e';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, px, py + radius + 18);
+  }
+
+  function drawAntlerConidiophoreTip(px, py, radius, label) {
+    ctx.save();
+    ctx.translate(px, py);
+
+    // Branching antler tip
+    ctx.beginPath();
+    ctx.moveTo(0, radius * 0.9);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(-radius * 0.5, -radius * 0.6);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(radius * 0.5, -radius * 0.6);
+    ctx.strokeStyle = '#2c1c0e';
+    ctx.lineWidth = 2.0;
+    ctx.stroke();
+
+    // Terminal spore heads
+    [-radius * 0.5, radius * 0.5].forEach(x => {
+      ctx.beginPath();
+      ctx.arc(x, -radius * 0.6, 5, 0, Math.PI * 2);
+      ctx.fillStyle = mode === 'cytoplasm' ? '#34d399' : '#45301e';
+      ctx.fill();
+    });
+
+    ctx.restore();
+    ctx.font = 'italic 11px Georgia, serif';
+    ctx.fillStyle = '#5c452e';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, px, py + radius + 18);
+  }
+
+  function drawFigureLabels(cx, cy) {
+    ctx.font = 'bold 13px Georgia, serif';
+    ctx.fillStyle = '#3a2717';
+    ctx.textAlign = 'center';
+    ctx.fillText("Fig. 1. Thallus mit Rhizomorphen (Ganzansicht)", cx, cy + 295);
+  }
+
+  // Draw immediately on page load
+  drawHaeckelPlate();
+</script>
+
+</body>
+</html>

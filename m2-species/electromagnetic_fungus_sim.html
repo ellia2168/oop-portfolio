@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>電磁共生真菌 3D 模擬器 | Bio-Electromagnetic Fungus Simulator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      background: #030712;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud * {
+      pointer-events: auto;
+    }
+    header {
+      top: 24px;
+      left: 28px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .species-tag {
+      font-size: 11px;
+      color: #94a3b8;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    #controls-panel {
+      bottom: 28px;
+      left: 28px;
+      width: 340px;
+    }
+    #info-panel {
+      top: 24px;
+      right: 28px;
+      width: 320px;
+    }
+    .control-group {
+      margin-bottom: 14px;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 500;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    .control-label span:last-child {
+      color: #38bdf8;
+      font-family: monospace;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 5px;
+      border-radius: 5px;
+      background: #1e293b;
+      outline: none;
+      -webkit-appearance: none;
+      accent-color: #38bdf8;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .metric-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .metric-title {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .metric-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: #38bdf8;
+      font-family: monospace;
+      margin-top: 2px;
+    }
+    .anatomy-point {
+      margin-bottom: 12px;
+      padding-left: 12px;
+      border-left: 2px solid #818cf8;
+    }
+    .anatomy-point:last-child {
+      margin-bottom: 0;
+    }
+    .anatomy-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+    .anatomy-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(56, 189, 248, 0.3);
+      color: #fff;
+    }
+    .btn.active {
+      background: #38bdf8;
+      color: #041226;
+      border-color: #38bdf8;
+    }
+    .energy-bar-wrap {
+      width: 100%;
+      height: 8px;
+      background: #0f172a;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .energy-bar {
+      height: 100%;
+      width: 72%;
+      background: linear-gradient(90deg, #38bdf8, #a855f7);
+      transition: width 0.3s;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <header class="hud">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/>
+      </svg>
+      電磁共生真菌 3D 模擬
+    </h1>
+    <div class="species-tag">SPECULATIVE TAXON: RADIOMYCES ELECTROVORUS // GEN-7</div>
+  </header>
+
+  <div id="info-panel" class="hud panel">
+    <div style="font-size: 13px; font-weight: 700; letter-spacing: 1px; color: #a5b4fc; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
+      <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#38bdf8; box-shadow:0 0 8px #38bdf8;"></span>
+      生物結構與吸收機制分析
+    </div>
+    <div class="anatomy-point">
+      <div class="anatomy-title">1. 拋物面傘蓋 (Parabolic Cap)</div>
+      <div class="anatomy-desc">倒皿狀幾何反射體，表面富含微晶化黑色素（melanin）與生物半導體顆粒，能將空間中微波與射頻聚焦至中央焦點。</div>
+    </div>
+    <div class="anatomy-point">
+      <div class="anatomy-title">2. 頂生諧振探針 (Monopole Spire)</div>
+      <div class="anatomy-desc">金屬質微晶棘刺，充當偶極或單極天線，專門感應高頻電磁場的位能震盪。</div>
+    </div>
+    <div class="anatomy-point">
+      <div class="anatomy-title">3. 分形導電菌絲網 (Fractal Hyphae)</div>
+      <div class="anatomy-desc">仿希爾伯特曲線（Hilbert Curve）蔓延於電路與金屬基質，兼具寬頻受訊天線與生物導線功能。</div>
+    </div>
+    <div class="anatomy-point">
+      <div class="anatomy-title">4. 電致發光與電暈放電 (Corona Glow)</div>
+      <div class="anatomy-desc">過剩電場促使菌褶邊緣產生微弱空氣電離（聖艾爾摩之火），隨吸收頻率變換幽藍至紫羅蘭光。</div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;">
+        <span>生物電容充能率 (Bio-Capacitance)</span>
+        <span id="charge-pct" style="color:#38bdf8; font-weight:700;">84%</span>
+      </div>
+      <div class="energy-bar-wrap">
+        <div id="energy-bar" class="energy-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls-panel" class="hud panel">
+    <div class="control-group">
+      <div class="control-label">
+        <span>環境電磁載頻 (Carrier Frequency)</span>
+        <span id="freq-val">2.45 GHz (Microwave)</span>
+      </div>
+      <input type="range" id="freq-slider" min="100" max="10000" step="50" value="2450">
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>電場功率密度 (Signal Flux / Power)</span>
+        <span id="power-val">85 dBm</span>
+      </div>
+      <input type="range" id="power-slider" min="10" max="120" step="1" value="85">
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>菌絲生長擴散 (Mycelium Network Span)</span>
+        <span id="growth-val">78%</span>
+      </div>
+      <input type="range" id="growth-slider" min="20" max="100" step="1" value="78">
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-title">吸收效率 (Q-Factor)</div>
+        <div class="metric-val" id="metric-q">94.2</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">合成代謝電位 (Flux)</div>
+        <div class="metric-val" id="metric-volt">412 mV</div>
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button class="btn active" id="btn-waves">電磁波層視圖</button>
+      <button class="btn active" id="btn-glow">電致發光輝光</button>
+      <button class="btn" id="btn-pulse">發送強脈衝</button>
+    </div>
+  </div>
+
+  <script>
+    // --- 3D Scene Initialization ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x030712, 0.025);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 5, 9);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.minDistance = 3;
+    controls.maxDistance = 20;
+    controls.target.set(0, 1.8, 0);
+
+    // --- Lighting ---
+    const ambientLight = new THREE.AmbientLight(0x0f172a, 1.5);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0x38bdf8, 2.0);
+    keyLight.position.set(5, 10, 5);
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0xa855f7, 2.5);
+    rimLight.position.set(-6, 4, -5);
+    scene.add(rimLight);
+
+    const coreLight = new THREE.PointLight(0x38bdf8, 3, 8);
+    coreLight.position.set(0, 2.2, 0);
+    scene.add(coreLight);
+
+    // --- Substrate: Circuit Grid Base ---
+    const gridHelper = new THREE.GridHelper(16, 32, 0x38bdf8, 0x1e293b);
+    gridHelper.position.y = 0;
+    scene.add(gridHelper);
+
+    // Metallic substrate disc
+    const substrateGeo = new THREE.CylinderGeometry(4.2, 4.5, 0.25, 48);
+    const substrateMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0f1d,
+      metalness: 0.85,
+      roughness: 0.35
+    });
+    const substrate = new THREE.Mesh(substrateGeo, substrateMat);
+    substrate.position.y = -0.125;
+    scene.add(substrate);
+
+    // --- Shader / Materials for Bio-Antenna Fungus ---
+    const bioBlackMaterial = new THREE.MeshStandardMaterial({
+      color: 0x111625,
+      metalness: 0.9,
+      roughness: 0.2,
+      emissive: 0x051329,
+      emissiveIntensity: 0.4
+    });
+
+    const glowMaterial = new THREE.MeshStandardMaterial({
+      color: 0x00ffff,
+      emissive: 0x00e5ff,
+      emissiveIntensity: 2.5,
+      metalness: 0.5,
+      roughness: 0.1
+    });
+
+    const antennaMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd4af37,
+      metalness: 1.0,
+      roughness: 0.15,
+      emissive: 0xffaa00,
+      emissiveIntensity: 0.8
+    });
+
+    // --- Build Fungus Group ---
+    const fungusGroup = new THREE.Group();
+    scene.add(fungusGroup);
+
+    // 1. Central Stem (Resonant Waveguide Stipe)
+    const stipeCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0.08, 0.8, 0.05),
+      new THREE.Vector3(-0.06, 1.6, -0.04),
+      new THREE.Vector3(0, 2.2, 0)
+    ]);
+    const stipeGeo = new THREE.TubeGeometry(stipeCurve, 40, 0.22, 16, false);
+    const stipe = new THREE.Mesh(stipeGeo, bioBlackMaterial);
+    fungusGroup.add(stipe);
+
+    // Conductive copper/gold veins coiled around the stipe
+    const coilPoints = [];
+    const coils = 5;
+    for (let i = 0; i <= 150; i++) {
+      const t = i / 150;
+      const angle = t * Math.PI * 2 * coils;
+      const radius = 0.25 - t * 0.05;
+      const pt = stipeCurve.getPoint(t);
+      coilPoints.push(new THREE.Vector3(
+        pt.x + Math.cos(angle) * radius,
+        pt.y,
+        pt.z + Math.sin(angle) * radius
+      ));
+    }
+    const coilGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(coilPoints), 120, 0.02, 8, false);
+    const coilMesh = new THREE.Mesh(coilGeo, antennaMaterial);
+    fungusGroup.add(coilMesh);
+
+    // 2. Main Parabolic Dish Cap (Inverted parabolic reflector)
+    const capPoints = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24;
+      const r = 1.35 * Math.pow(t, 0.7);
+      const y = -0.45 * (1 - Math.pow(t, 2));
+      capPoints.push(new THREE.Vector2(r, y));
+    }
+    const capGeo = new THREE.LatheGeometry(capPoints, 36);
+    const mainCap = new THREE.Mesh(capGeo, bioBlackMaterial);
+    mainCap.position.set(0, 2.35, 0);
+    fungusGroup.add(mainCap);
+
+    // Resonant Rings inside the cap (concentric Fresnel-like zones)
+    const ringGroup = new THREE.Group();
+    for (let r = 0.35; r <= 1.25; r += 0.3) {
+      const ringGeo = new THREE.TorusGeometry(r, 0.02, 8, 36);
+      ringGeo.rotateX(Math.PI / 2);
+      const ringMesh = new THREE.Mesh(ringGeo, glowMaterial);
+      ringMesh.position.y = -0.22 + (r * 0.12);
+      ringGroup.add(ringMesh);
+    }
+    mainCap.add(ringGroup);
+
+    // Under-cap radiating gills (RF slotted waveguide fins)
+    const gillCount = 28;
+    for (let i = 0; i < gillCount; i++) {
+      const angle = (i / gillCount) * Math.PI * 2;
+      const gillGeo = new THREE.BoxGeometry(0.015, 0.18, 0.9);
+      const gill = new THREE.Mesh(gillGeo, bioBlackMaterial);
+      gill.position.set(Math.cos(angle) * 0.5, -0.15, Math.sin(angle) * 0.5);
+      gill.rotation.y = -angle;
+      mainCap.add(gill);
+    }
+
+    // 3. Central Monopole Spire (Spike antenna at apex)
+    const spireGeo = new THREE.ConeGeometry(0.06, 0.9, 16);
+    spireGeo.translate(0, 0.45, 0);
+    const spire = new THREE.Mesh(spireGeo, antennaMaterial);
+    spire.position.set(0, 0.05, 0);
+    mainCap.add(spire);
+
+    // Corona spark emitter orb at spire tip
+    const coronaGeo = new THREE.SphereGeometry(0.08, 16, 16);
+    const coronaMesh = new THREE.Mesh(coronaGeo, glowMaterial);
+    coronaMesh.position.set(0, 0.92, 0);
+    mainCap.add(coronaMesh);
+
+    // --- Secondary Smaller Fruiting Bodies ---
+    function createMiniFungus(x, z, scale, angleOffset) {
+      const sub = new THREE.Group();
+      sub.position.set(x, 0, z);
+      sub.scale.set(scale, scale, scale);
+      sub.rotation.y = angleOffset;
+
+      const subCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0.05, 0.5, 0.02),
+        new THREE.Vector3(0, 1.2, 0)
+      ]);
+      const subStipe = new THREE.Mesh(new THREE.TubeGeometry(subCurve, 20, 0.14, 12, false), bioBlackMaterial);
+      sub.add(subStipe);
+
+      const subCap = new THREE.Mesh(capGeo, bioBlackMaterial);
+      subCap.position.set(0, 1.25, 0);
+      subCap.scale.set(0.65, 0.65, 0.65);
+      subCap.rotation.x = 0.15;
+      subCap.rotation.z = -0.15;
+      sub.add(subCap);
+
+      const subSpire = new THREE.Mesh(spireGeo, antennaMaterial);
+      subSpire.scale.set(0.6, 0.7, 0.6);
+      subSpire.position.set(0, 0.05, 0);
+      subCap.add(subSpire);
+
+      return sub;
+    }
+
+    fungusGroup.add(createMiniFungus(1.1, 0.6, 0.65, 0.4));
+    fungusGroup.add(createMiniFungus(-0.9, -0.8, 0.52, -1.2));
+    fungusGroup.add(createMiniFungus(0.7, -1.0, 0.45, 2.1));
+    fungusGroup.add(createMiniFungus(-1.2, 0.5, 0.58, 3.5));
+
+    // --- Fractal Mycelium Network on Substrate ---
+    const myceliumGroup = new THREE.Group();
+    scene.add(myceliumGroup);
+
+    const hyphaeLineMaterial = new THREE.LineBasicMaterial({
+      color: 0x38bdf8,
+      linewidth: 1.5,
+      transparent: true,
+      opacity: 0.8
+    });
+
+    // Generate branching Hilbert/circuit traces
+    function generateMyceliumBranch(start, dir, length, depth, maxDepth) {
+      if (depth > maxDepth || length < 0.15) return;
+      const end = start.clone().add(dir.clone().multiplyScalar(length));
+      end.y = 0.01 + Math.random() * 0.02;
+
+      const points = [start, end];
+      const geo = new THREE.BufferGeometry().setFromPoints(points);
+      const line = new THREE.Line(geo, hyphaeLineMaterial);
+      myceliumGroup.add(line);
+
+      // Node emitter
+      if (Math.random() > 0.4) {
+        const dotGeo = new THREE.SphereGeometry(0.025, 8, 8);
+        const dot = new THREE.Mesh(dotGeo, glowMaterial);
+        dot.position.copy(end);
+        myceliumGroup.add(dot);
+      }
+
+      // Branching
+      const branchCount = Math.floor(Math.random() * 2) + 2;
+      for (let i = 0; i < branchCount; i++) {
+        const angle = (Math.random() - 0.5) * 1.3 + (i === 0 ? 0.35 : -0.35);
+        const newDir = dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), angle).normalize();
+        generateMyceliumBranch(end, newDir, length * (0.68 + Math.random() * 0.2), depth + 1, maxDepth);
+      }
+    }
+
+    const mainRoots = 10;
+    for (let i = 0; i < mainRoots; i++) {
+      const theta = (i / mainRoots) * Math.PI * 2;
+      const startPt = new THREE.Vector3(Math.cos(theta) * 0.2, 0.01, Math.sin(theta) * 0.2);
+      const dir = new THREE.Vector3(Math.cos(theta), 0, Math.sin(theta)).normalize();
+      generateMyceliumBranch(startPt, dir, 0.85, 1, 5);
+    }
+
+    // --- Electromagnetic Waves (Spherical Field Ripples) ---
+    const waveCount = 5;
+    const waves = [];
+    const waveGeo = new THREE.SphereGeometry(1, 32, 24);
+
+    for (let i = 0; i < waveCount; i++) {
+      const waveMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.15
+      });
+      const wave = new THREE.Mesh(waveGeo, waveMat);
+      wave.position.set(0, 2.35, 0);
+      const scaleInit = 1 + (i * 0.9);
+      wave.scale.set(scaleInit, scaleInit, scaleInit);
+      scene.add(wave);
+      waves.push({ mesh: wave, radius: scaleInit });
+    }
+
+    // --- Incoming Field Energy Particles (Ingestion Stream) ---
+    const particleCount = 180;
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(particleCount * 3);
+    const pVel = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      const radius = 2.5 + Math.random() * 4.5;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI * 0.6;
+      pPos[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      pPos[i * 3 + 1] = Math.max(0.1, radius * Math.cos(phi) + 1.2);
+      pPos[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+      pVel.push({
+        origDist: radius,
+        speed: 0.02 + Math.random() * 0.03
+      });
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+
+    const pMat = new THREE.PointsMaterial({
+      color: 0x67e8f9,
+      size: 0.06,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+    const particleSystem = new THREE.Points(pGeo, pMat);
+    scene.add(particleSystem);
+
+    // --- Dynamic Parameters & Interactivity ---
+    let freq = 2450; // MHz
+    let power = 85;  // dBm
+    let growth = 0.78;
+    let showWaves = true;
+    let showGlow = true;
+    let pulseShock = 0;
+
+    const freqSlider = document.getElementById('freq-slider');
+    const powerSlider = document.getElementById('power-slider');
+    const growthSlider = document.getElementById('growth-slider');
+
+    const freqVal = document.getElementById('freq-val');
+    const powerVal = document.getElementById('power-val');
+    const growthVal = document.getElementById('growth-val');
+    const metricQ = document.getElementById('metric-q');
+    const metricVolt = document.getElementById('metric-volt');
+    const energyBar = document.getElementById('energy-bar');
+    const chargePct = document.getElementById('charge-pct');
+
+    function updateColorFromFreq(f) {
+      let colorHex;
+      let label = "";
+      if (f < 1000) {
+        // Radio waves (amber/orange)
+        colorHex = 0xf59e0b;
+        label = `${(f).toFixed(0)} MHz (HF / VHF Radio)`;
+      } else if (f < 5000) {
+        // Microwaves (cyan / blue)
+        colorHex = 0x38bdf8;
+        label = `${(f/1000).toFixed(2)} GHz (Microwave / Wi-Fi / Radar)`;
+      } else {
+        // Terahertz / Far IR (violet / electric magenta)
+        colorHex = 0xc084fc;
+        label = `${(f/1000).toFixed(2)} GHz (Sub-THz Resonant)`;
+      }
+
+      const c = new THREE.Color(colorHex);
+      glowMaterial.color.copy(c);
+      glowMaterial.emissive.copy(c);
+      hyphaeLineMaterial.color.copy(c);
+      pMat.color.copy(c);
+      coreLight.color.copy(c);
+      keyLight.color.copy(c);
+      waves.forEach(w => w.mesh.material.color.copy(c));
+
+      freqVal.textContent = label;
+      freqVal.style.color = '#' + c.getHexString();
+
+      // Q factor & voltage calculation based on frequency match
+      const resonancePeak = 2450;
+      const delta = Math.abs(f - resonancePeak) / 1000;
+      const q = Math.max(12, 120 - delta * 25).toFixed(1);
+      const volt = Math.round((power * 3.8) + (100 - delta * 15));
+      metricQ.textContent = q;
+      metricVolt.textContent = `${volt} mV`;
+
+      const charge = Math.min(100, Math.round(volt / 5.2));
+      energyBar.style.width = charge + '%';
+      chargePct.textContent = charge + '%';
+    }
+
+    freqSlider.addEventListener('input', (e) => {
+      freq = parseFloat(e.target.value);
+      updateColorFromFreq(freq);
+    });
+
+    powerSlider.addEventListener('input', (e) => {
+      power = parseFloat(e.target.value);
+      powerVal.textContent = `${power} dBm`;
+      const intensity = (power / 50);
+      coreLight.intensity = intensity * 2.2;
+      glowMaterial.emissiveIntensity = intensity * 2;
+      updateColorFromFreq(freq);
+    });
+
+    growthSlider.addEventListener('input', (e) => {
+      growth = parseFloat(e.target.value) / 100;
+      growthVal.textContent = `${Math.round(growth * 100)}%`;
+      myceliumGroup.scale.set(growth, 1, growth);
+    });
+
+    const btnWaves = document.getElementById('btn-waves');
+    btnWaves.addEventListener('click', () => {
+      showWaves = !showWaves;
+      btnWaves.classList.toggle('active', showWaves);
+      waves.forEach(w => w.mesh.visible = showWaves);
+    });
+
+    const btnGlow = document.getElementById('btn-glow');
+    btnGlow.addEventListener('click', () => {
+      showGlow = !showGlow;
+      btnGlow.classList.toggle('active', showGlow);
+      glowMaterial.emissiveIntensity = showGlow ? (power / 50) * 2 : 0;
+      coreLight.visible = showGlow;
+    });
+
+    const btnPulse = document.getElementById('btn-pulse');
+    btnPulse.addEventListener('click', () => {
+      pulseShock = 1.0;
+    });
+
+    updateColorFromFreq(freq);
+
+    // --- Animation Loop ---
+    let clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      const delta = clock.getDelta();
+
+      // Gentle fungus respiration & EM resonance oscillation
+      const oscillation = Math.sin(elapsed * 3.5) * 0.02;
+      mainCap.rotation.y = Math.sin(elapsed * 0.8) * 0.05;
+      mainCap.position.y = 2.35 + oscillation;
+
+      // Pulse Shock decay
+      if (pulseShock > 0.01) {
+        pulseShock *= 0.94;
+        coronaMesh.scale.setScalar(1 + pulseShock * 4);
+        coreLight.intensity = 3 + pulseShock * 8;
+      } else {
+        coronaMesh.scale.setScalar(1 + Math.sin(elapsed * 12) * 0.15);
+      }
+
+      // Inward Particle Convergence (Electromagnetic signal absorption)
+      const positions = particleSystem.geometry.attributes.position.array;
+      const target = new THREE.Vector3(0, 2.35, 0);
+
+      for (let i = 0; i < particleCount; i++) {
+        const idx = i * 3;
+        let px = positions[idx];
+        let py = positions[idx + 1];
+        let pz = positions[idx + 2];
+
+        const cur = new THREE.Vector3(px, py, pz);
+        const dir = target.clone().sub(cur);
+        const dist = dir.length();
+
+        if (dist < 0.25 || dist > 8.0) {
+          // Reset particle to perimeter
+          const radius = 3.5 + Math.random() * 3.5;
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.random() * Math.PI * 0.6;
+          positions[idx] = radius * Math.sin(phi) * Math.cos(theta);
+          positions[idx + 1] = Math.max(0.2, radius * Math.cos(phi) + 1.2);
+          positions[idx + 2] = radius * Math.sin(phi) * Math.sin(theta);
+        } else {
+          const moveSpeed = (0.025 + (power / 100) * 0.035) * (1 + pulseShock * 2.5);
+          dir.normalize().multiplyScalar(moveSpeed);
+          positions[idx] += dir.x;
+          positions[idx + 1] += dir.y;
+          positions[idx + 2] += dir.z;
+        }
+      }
+      particleSystem.geometry.attributes.position.needsUpdate = true;
+
+      // Spherical EM Waves propagation
+      if (showWaves) {
+        waves.forEach((w, idx) => {
+          w.radius -= (0.018 + (freq / 8000) * 0.02);
+          if (w.radius < 0.3) {
+            w.radius = 4.8;
+          }
+          w.mesh.scale.set(w.radius, w.radius, w.radius);
+          // Opacity highest when close to antenna, fading outwards
+          const normDist = (w.radius - 0.3) / 4.5;
+          w.mesh.material.opacity = Math.sin(normDist * Math.PI) * 0.25 * (power / 80);
+        });
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // --- Responsive Resize ---
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
