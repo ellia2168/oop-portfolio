@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M3 個體天性 // 記憶噬電共振擬網菌 (Noospora Memorabilis)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020508;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      user-select: none;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud * { pointer-events: auto; }
+
+    header {
+      top: 20px;
+      left: 24px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .species-tag {
+      font-size: 11px;
+      color: #38bdf8;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+
+    .instinct-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 4px 12px;
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 20px;
+      font-size: 11px;
+      color: #bae6fd;
+    }
+    .instinct-banner strong {
+      color: #38bdf8;
+    }
+
+    .panel {
+      background: rgba(4, 11, 16, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 14px;
+      padding: 16px 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+    .panel::-webkit-scrollbar {
+      width: 4px;
+    }
+    .panel::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.35);
+      border-radius: 4px;
+    }
+
+    #controls-panel {
+      bottom: 20px;
+      left: 24px;
+      width: 380px;
+    }
+    #info-panel {
+      top: 20px;
+      right: 24px;
+      width: 350px;
+    }
+
+    .panel-section {
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .panel-section:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #7dd3fc;
+      margin-bottom: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title-text {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .panel-title-text::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #0ea5e9;
+      box-shadow: 0 0 8px #0ea5e9;
+    }
+
+    .control-group {
+      margin-bottom: 8px;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 3px;
+    }
+    .control-val {
+      font-family: monospace;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      height: 5px;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+      cursor: pointer;
+      transition: transform 0.15s, background-color 0.15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      background: #7dd3fc;
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+      gap: 6px;
+      margin-top: 5px;
+    }
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #cbd5e1;
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+      color: #fff;
+      border-color: rgba(56, 189, 248, 0.6);
+    }
+    .btn.active {
+      background: #0284c7;
+      color: #f0fdf4;
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+    }
+
+    .stage-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      background: rgba(14, 165, 233, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      font-size: 10.5px;
+      color: #7dd3fc;
+      font-weight: 600;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.75); }
+    }
+
+    .bio-point {
+      margin-bottom: 9px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .bio-name {
+      font-weight: 700;
+      color: #7dd3fc;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bio-name::before {
+      content: '⚡';
+      font-size: 10px;
+    }
+    .bio-desc {
+      color: #94a3b8;
+      padding-left: 15px;
+    }
+
+    .timeline-container {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      font-size: 9.5px;
+      color: #64748b;
+      font-family: monospace;
+    }
+    .timeline-node {
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .timeline-node.active {
+      color: #38bdf8;
+      font-weight: 700;
+      text-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+    }
+
+    #sound-btn {
+      position: absolute;
+      top: 22px;
+      left: 540px;
+      background: rgba(4, 11, 16, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      color: #7dd3fc;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s;
+      z-index: 10;
+    }
+    #sound-btn:hover {
+      background: rgba(14, 165, 233, 0.25);
+      border-color: #38bdf8;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <button id="sound-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+    </svg>
+    <span>頻譜盲區防護聲態: 關 (55Hz 胞質頻率 ✕ 量子熱噪)</span>
+  </button>
+
+  <header class="hud">
+    <h1>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 6v6l4 2"></path>
+      </svg>
+      M3 個體天性 // 記憶噬電共振擬網菌
+    </h1>
+    <div class="species-tag">MIOCENE-SUPERPOSITION [15.0 Ma] ✕ SENSE-THINK-ACT INSTINCT</div>
+    <div class="instinct-banner">
+      <span>🎯 <strong>天性交互指引</strong>：在場景中<strong>移動滑鼠</strong>＝引導外在電磁微擾（菌株向電性轉向追隨）；<strong>點擊滑鼠</strong>＝激發聖艾爾摩生物放電</span>
+    </div>
+  </header>
+
+  <!-- Left: Real-time Controls Panel -->
+  <div id="controls-panel" class="hud panel">
+    
+    <!-- Section 1: Instinct & Sensory Tracking -->
+    <div class="panel-section">
+      <div class="panel-title">
+        <div class="panel-title-text">天性感知控制 (Sensory Instinct)</div>
+        <div id="instinct-badge" class="stage-status">
+          <span class="pulse-dot"></span>
+          <span id="txt-instinct">趨電追隨中</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>趨電轉向靈敏度 (Steering Sensitivity)</span>
+          <span id="v-sens" class="control-val">1.2x</span>
+        </div>
+        <input type="range" id="sl-sens" min="0.2" max="2.5" step="0.1" value="1.2">
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>近場噬電吸收增益 (Proximity Uptake)</span>
+          <span id="v-uptake" class="control-val">100%</span>
+        </div>
+        <input type="range" id="sl-uptake" min="0" max="200" step="10" value="100">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn active" id="btn-toggle-tracking">趨電性追隨: 開</button>
+        <button class="btn" id="btn-trigger-burst">激發放電噴孢</button>
+      </div>
+    </div>
+
+    <!-- Section 2: Growth Time-Lapse -->
+    <div class="panel-section">
+      <div class="panel-title">
+        <div class="panel-title-text">四維縮時生長 (4D Morphing)</div>
+        <div id="status-badge" class="stage-status">
+          <span class="pulse-dot"></span>
+          <span id="txt-stage">開傘噴孢期</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>生長階段進度 (Growth Stage)</span>
+          <span id="v-progress" class="control-val">80%</span>
+        </div>
+        <input type="range" id="sl-progress" min="0" max="100" step="0.5" value="80">
+      </div>
+
+      <div class="timeline-container">
+        <span class="timeline-node" data-target="5">① 原基卵蕾</span>
+        <span class="timeline-node" data-target="30">② 菌柄拔高</span>
+        <span class="timeline-node" data-target="60">③ 菌膜破裂</span>
+        <span class="timeline-node active" data-target="80">④ 膨脹開傘</span>
+        <span class="timeline-node" data-target="100">⑤ 孢子狂湧</span>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>縮時播放倍率</span>
+          <span id="v-speed" class="control-val">1.0x</span>
+        </div>
+        <input type="range" id="sl-speed" min="0.1" max="4.0" step="0.1" value="1.0">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn active" id="btn-play">暫停縮時</button>
+        <button class="btn" id="btn-loop">生滅迴圈: 關</button>
+        <button class="btn" id="btn-reset">重置原基</button>
+      </div>
+    </div>
+
+    <!-- Section 3: Species Presets -->
+    <div class="panel-section">
+      <div class="panel-title">
+        <div class="panel-title-text">真菌物種形態風格 (Species Presets)</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn active" id="preset-noosphere">記憶噬電擬網菌</button>
+        <button class="btn" id="preset-melanin">黑天鵝噬電菌</button>
+        <button class="btn" id="preset-mycena">幽冥螢光小菇</button>
+        <button class="btn" id="preset-ghost">幽靈白傘</button>
+        <button class="btn" id="preset-amanita">毒蠅傘幻境</button>
+      </div>
+    </div>
+
+    <!-- Section 4: Environment & Camera Controls -->
+    <div>
+      <div class="panel-title">
+        <div class="panel-title-text">時空觀測視角 (Observation Camera)</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn active" id="cam-wide-env">時空全景</button>
+        <button class="btn" id="cam-cinematic">主景縮時</button>
+        <button class="btn" id="cam-gills">蕈褶相控讀寫</button>
+        <button class="btn" id="cam-cap">黑曜石穹頂</button>
+        <button class="btn" id="cam-mycelium">地底活體硬碟</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: Biology & Real-time Instinct Telemetry -->
+  <div id="info-panel" class="hud panel">
+    <div class="panel-title">
+      <div class="panel-title-text">M3 個體天性 // 即時感知遙測</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">1. 向電性追隨天性 (Electrotropic Steering)</div>
+      <div class="bio-desc">真菌以極高靈敏度即時感應空間中的外在電磁微擾（游標移動），菌柄與傘面自動計算轉向向量向輻射源彎曲傾斜。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">2. 近場噬電呼吸調製 (Proximity Uptake)</div>
+      <div class="bio-desc">當輻射源靠近時，菌蓋黑色素吸收速率大幅提升，傘面冷藍螢光轉強，地底活體硬碟的記憶資料脈衝速度隨之倍增。</div>
+    </div>
+
+    <div class="bio-point">
+      <div class="bio-name">3. 聖艾爾摩放電反饋 (St. Elmo's Fire Discharge)</div>
+      <div class="bio-desc">當受到劇烈外部刺激（滑鼠點擊）時，細胞膜迅速釋放儲存之跨膜電位，引發全株高亮放電並噴湧防禦性記憶孢子雲。</div>
+    </div>
+
+    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>個體天性狀態:</span>
+        <span id="tel-state" class="control-val" style="color: #38bdf8;">[TRACKING_RADIATION]</span>
+      </div>
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>電磁源空間距離:</span>
+        <span id="tel-dist" class="control-val" style="color: #a7f3d0;">2.4 m</span>
+      </div>
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>向電性偏折角度:</span>
+        <span id="tel-angle" class="control-val" style="color: #c084fc;">14.2°</span>
+      </div>
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>即時噬電通量:</span>
+        <span id="tel-uptake" class="control-val" style="color: #f59e0b;">8.4 mJ/s</span>
+      </div>
+      <div class="control-label" style="margin-top: 6px; margin-bottom: 2px;">
+        <span>即時菌體導波柱高:</span>
+        <span id="tel-height" class="control-val">7.8 cm</span>
+      </div>
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>即時相控菌蓋直徑:</span>
+        <span id="tel-cap" class="control-val">6.2 cm</span>
+      </div>
+      <div class="control-label" style="margin-bottom: 2px;">
+        <span>記憶孢子浮游速率:</span>
+        <span id="tel-spores" class="control-val">420/s</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    // --- THREE.JS SCENE SETUP ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x020810, 0.022);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 140);
+    camera.position.set(0, 5.0, 11.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.04;
+    controls.minDistance = 1.5;
+    controls.maxDistance = 28;
+    controls.target.set(0, 1.5, 0);
+
+    // --- NEUTRAL SLATE LIGHTING (NO GREEN TINT) ---
+    const ambientLight = new THREE.AmbientLight(0x0a1420, 1.8);
+    scene.add(ambientLight);
+
+    const overheadLight = new THREE.DirectionalLight(0x80e8ff, 1.8);
+    overheadLight.position.set(3, 8, 4);
+    overheadLight.castShadow = true;
+    overheadLight.shadow.mapSize.width = 1024;
+    overheadLight.shadow.mapSize.height = 1024;
+    overheadLight.shadow.bias = -0.001;
+    scene.add(overheadLight);
+
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.6);
+    rimLight.position.set(-4, 2, -4);
+    scene.add(rimLight);
+
+    const clusterGlowLight = new THREE.PointLight(0x38bdf8, 4.2, 7.0);
+    clusterGlowLight.position.set(0, 1.2, 0);
+    scene.add(clusterGlowLight);
+
+    // --- SUBSTRATE (Miocene Sediment & Vitrified Bedrock) ---
+    const slabGeo = new THREE.CylinderGeometry(4.6, 5.0, 0.45, 64);
+    const slabMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0707,
+      roughness: 0.92,
+      metalness: 0.15
+    });
+    const slab = new THREE.Mesh(slabGeo, slabMat);
+    slab.position.y = -0.22;
+    slab.receiveShadow = true;
+    scene.add(slab);
+
+    const terrainGeo = new THREE.RingGeometry(0.2, 4.4, 48, 16);
+    terrainGeo.rotateX(-Math.PI / 2);
+    const tPos = terrainGeo.attributes.position;
+    for (let i = 0; i < tPos.count; i++) {
+      const x = tPos.getX(i);
+      const z = tPos.getZ(i);
+      const dist = Math.sqrt(x*x + z*z);
+      const bump = Math.sin(x * 3.5) * Math.cos(z * 3.2) * 0.08 + Math.sin(dist * 5) * 0.04;
+      tPos.setY(i, bump);
+    }
+    terrainGeo.computeVertexNormals();
+    const terrainMat = new THREE.MeshStandardMaterial({
+      color: 0x080605,
+      roughness: 0.95,
+      metalness: 0.08
+    });
+    const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+    terrain.position.y = 0.01;
+    scene.add(terrain);
+
+    // --- QUANTUM SKY DOME ---
+    const domeGeo = new THREE.SphereGeometry(78, 36, 28);
+    const domeMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      uniforms: {
+        time: { value: 0 },
+        glowStrength: { value: 1.0 },
+        topColor: { value: new THREE.Color(0x01050a) },
+        bottomColor: { value: new THREE.Color(0x040d16) }
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPos.xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 bottomColor;
+        uniform float glowStrength;
+        uniform float time;
+        varying vec3 vWorldPosition;
+        varying vec2 vUv;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        void main() {
+          float h = normalize(vWorldPosition).y;
+          vec3 col = bottomColor;
+          if (h > 0.0) {
+            float mixMid = smoothstep(0.0, 0.45, h);
+            float mixTop = smoothstep(0.35, 0.92, h);
+            col = mix(bottomColor, vec3(0.02, 0.12, 0.18) * glowStrength, mixMid);
+            col = mix(col, topColor, mixTop);
+
+            float wave1 = sin(vUv.x * 10.0 + time * 0.35 + sin(vUv.y * 6.0)) * 0.5 + 0.5;
+            float wave2 = cos(vUv.y * 12.0 - time * 0.28 + cos(vUv.x * 7.0)) * 0.5 + 0.5;
+            float ribbon = pow(wave1 * wave2, 2.2);
+            vec3 plasmaCol = mix(vec3(0.05, 0.75, 0.98), vec3(0.65, 0.35, 0.98), sin(time * 0.25 + vUv.x * 3.14) * 0.5 + 0.5);
+            col += plasmaCol * ribbon * 0.65 * glowStrength * smoothstep(0.05, 0.65, h);
+
+            vec2 starGrid = floor(vUv * 260.0);
+            float rnd = hash(starGrid);
+            if (rnd > 0.982) {
+              float twinkle = sin(time * 2.6 + rnd * 6.28) * 0.5 + 0.5;
+              col += vec3(0.5, 0.9, 1.0) * twinkle * 0.7 * glowStrength * (h - 0.1);
+            }
+          } else {
+            col = mix(bottomColor, vec3(0.01, 0.02, 0.04), -h);
+          }
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+    const skyDome = new THREE.Mesh(domeGeo, domeMat);
+    scene.add(skyDome);
+
+    // --- EXTENDED TERRAIN FLOOR ---
+    const outerFloorGeo = new THREE.RingGeometry(4.3, 40, 56, 20);
+    outerFloorGeo.rotateX(-Math.PI / 2);
+    const ofPos = outerFloorGeo.attributes.position;
+    for (let i = 0; i < ofPos.count; i++) {
+      const x = ofPos.getX(i);
+      const z = ofPos.getZ(i);
+      const r = Math.sqrt(x * x + z * z);
+      const noise = Math.sin(x * 0.32) * Math.cos(z * 0.35) * 0.42
+                  + Math.sin(x * 0.82 + z * 0.55) * 0.18
+                  + Math.sin(r * 0.45) * 0.12;
+      const blend = Math.min(1.0, Math.max(0.0, (r - 4.4) / 3.0));
+      ofPos.setY(i, -0.22 + noise * blend);
+    }
+    outerFloorGeo.computeVertexNormals();
+    const outerFloorMat = new THREE.MeshStandardMaterial({
+      color: 0x080504,
+      roughness: 0.92,
+      metalness: 0.12
+    });
+    const outerFloor = new THREE.Mesh(outerFloorGeo, outerFloorMat);
+    outerFloor.receiveShadow = true;
+    scene.add(outerFloor);
+
+    // --- SURROUNDING TREES WITH NEURAL VINES ---
+    const treesGroup = new THREE.Group();
+    scene.add(treesGroup);
+
+    const treeVinesList = [];
+    const treeAngles = [0.25, 0.92, 1.65, 2.38, 3.2, 3.9, 4.65, 5.35, 5.95];
+    const treeDists = [10.5, 13.2, 11.0, 14.5, 12.0, 11.5, 13.8, 10.8, 12.5];
+    const treeHeights = [11, 14, 12, 15, 13, 11, 14, 12, 13];
+
+    treeAngles.forEach((angle, idx) => {
+      const dist = treeDists[idx];
+      const tx = Math.cos(angle) * dist;
+      const tz = Math.sin(angle) * dist;
+      const th = treeHeights[idx];
+
+      const trunkGeo = new THREE.CylinderGeometry(0.55 + Math.random() * 0.25, 1.35 + Math.random() * 0.4, th, 14, 8);
+      const trkPos = trunkGeo.attributes.position;
+      for (let i = 0; i < trkPos.count; i++) {
+        const y = trkPos.getY(i);
+        trkPos.setX(i, trkPos.getX(i) + Math.sin(y * 0.35 + idx) * 0.35);
+      }
+      trunkGeo.computeVertexNormals();
+
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x080a0c, roughness: 0.95, metalness: 0.05 });
+      const trunkMesh = new THREE.Mesh(trunkGeo, trunkMat);
+      trunkMesh.position.set(tx, th * 0.48 - 0.2, tz);
+      trunkMesh.rotation.y = Math.random() * Math.PI * 2;
+      treesGroup.add(trunkMesh);
+
+      const vinePts = [];
+      const vineRev = 3.2 + Math.random() * 1.5;
+      const vineSegs = 36;
+      for (let s = 0; s <= vineSegs; s++) {
+        const t = s / vineSegs;
+        const vY = (t - 0.5) * th * 0.85;
+        const vR = (1.1 - t * 0.55) * 1.15;
+        const vA = t * Math.PI * 2 * vineRev + idx;
+        vinePts.push(new THREE.Vector3(Math.cos(vA) * vR, vY, Math.sin(vA) * vR));
+      }
+      const vineCurve = new THREE.CatmullRomCurve3(vinePts);
+      const vineGeo = new THREE.TubeGeometry(vineCurve, 30, 0.045, 6, false);
+      const vineMat = new THREE.MeshStandardMaterial({
+        color: 0x041824,
+        emissive: (idx % 2 === 0) ? 0x0284c7 : 0x38bdf8,
+        emissiveIntensity: 0.8,
+        roughness: 0.3
+      });
+      const vineMesh = new THREE.Mesh(vineGeo, vineMat);
+      vineMesh.position.copy(trunkMesh.position);
+      vineMesh.rotation.copy(trunkMesh.rotation);
+      treesGroup.add(vineMesh);
+      treeVinesList.push({ mat: vineMat, baseIntensity: 0.8, phase: idx * 0.8 });
+    });
+
+    // --- VITRIFIED NEURAL MONOLITHS ---
+    const floraGroup = new THREE.Group();
+    scene.add(floraGroup);
+
+    for (let r = 0; r < 14; r++) {
+      const rAngle = Math.random() * Math.PI * 2;
+      const rDist = 4.8 + Math.random() * 6.5;
+      const rx = Math.cos(rAngle) * rDist;
+      const rz = Math.sin(rAngle) * rDist;
+      const obeliskGeo = new THREE.ConeGeometry(0.35 + Math.random() * 0.25, 2.4 + Math.random() * 1.5, 4);
+      const obeliskMat = new THREE.MeshStandardMaterial({
+        color: 0x03080e,
+        emissive: 0x0284c7,
+        emissiveIntensity: 0.3,
+        roughness: 0.1,
+        metalness: 0.88
+      });
+      const obelisk = new THREE.Mesh(obeliskGeo, obeliskMat);
+      obelisk.position.set(rx, 0.6, rz);
+      obelisk.rotation.set((Math.random() - 0.5) * 0.35, Math.random() * Math.PI, (Math.random() - 0.5) * 0.35);
+      floraGroup.add(obelisk);
+    }
+
+    // --- PROCEDURAL MYCELIUM LIVING HARD DRIVE ---
+    const myceliumGroup = new THREE.Group();
+    scene.add(myceliumGroup);
+
+    const myceliumLines = [];
+    const MYCELIUM_BRANCHES = 42;
+    for (let b = 0; b < MYCELIUM_BRANCHES; b++) {
+      const pts = [];
+      const baseAngle = (b / MYCELIUM_BRANCHES) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+      let r = 0.2 + Math.random() * 0.1;
+      let angle = baseAngle;
+      const numSegments = 14 + Math.floor(Math.random() * 10);
+      
+      for (let s = 0; s < numSegments; s++) {
+        r += 0.08 + Math.random() * 0.06;
+        angle += (Math.random() - 0.5) * 0.25;
+        pts.push(new THREE.Vector3(Math.cos(angle) * r, 0.02 + Math.random() * 0.015, Math.sin(angle) * r));
+      }
+      
+      const curve = new THREE.CatmullRomCurve3(pts);
+      const branchGeo = new THREE.TubeGeometry(curve, numSegments * 2, 0.022 * (1.0 - (b%3)*0.2), 6, false);
+      const branchMat = new THREE.MeshStandardMaterial({
+        color: 0x051a24,
+        emissive: 0x0284c7,
+        emissiveIntensity: 0.65,
+        roughness: 0.3
+      });
+      const branchMesh = new THREE.Mesh(branchGeo, branchMat);
+      myceliumGroup.add(branchMesh);
+      myceliumLines.push({
+        mesh: branchMesh,
+        mat: branchMat,
+        baseEmissive: 0.65,
+        offset: Math.random() * Math.PI * 2,
+        distRatio: (b / MYCELIUM_BRANCHES)
+      });
+    }
+
+    // --- QUANTUM INFORMATION SPORES & BURST SYSTEM ---
+    const MAX_SPORES = 2500;
+    const sporeGeo = new THREE.BufferGeometry();
+    const sporePositions = new Float32Array(MAX_SPORES * 3);
+    const sporeVelocities = [];
+    const sporeLifetimes = new Float32Array(MAX_SPORES);
+    const sporeMaxLives = new Float32Array(MAX_SPORES);
+
+    function createSporeTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.25, 'rgba(125, 211, 252, 0.9)');
+      grad.addColorStop(0.6, 'rgba(14, 165, 233, 0.25)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    for (let i = 0; i < MAX_SPORES; i++) {
+      sporePositions[i * 3 + 0] = (Math.random() - 0.5) * 1.5;
+      sporePositions[i * 3 + 1] = 0.5 + Math.random() * 2.5;
+      sporePositions[i * 3 + 2] = (Math.random() - 0.5) * 1.5;
+      sporeVelocities.push(new THREE.Vector3(
+        (Math.random() - 0.5) * 0.015,
+        0.012 + Math.random() * 0.02,
+        (Math.random() - 0.5) * 0.015
+      ));
+      sporeLifetimes[i] = Math.random() * 100;
+      sporeMaxLives[i] = 80 + Math.random() * 60;
+    }
+
+    sporeGeo.setAttribute('position', new THREE.BufferAttribute(sporePositions, 3));
+    const sporeMat = new THREE.PointsMaterial({
+      color: 0x7dd3fc,
+      size: 0.12,
+      map: createSporeTexture(),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.85
+    });
+    const sporePoints = new THREE.Points(sporeGeo, sporeMat);
+    scene.add(sporePoints);
+
+    // --- M3 ENVIRONMENTAL RADIATION TRACKER (MOUSE) ---
+    // Represents external residual consciousness wave / electromagnetic disturbance
+    const radiationOrbGeo = new THREE.SphereGeometry(0.12, 16, 16);
+    const radiationOrbMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true });
+    const radiationOrb = new THREE.Mesh(radiationOrbGeo, radiationOrbMat);
+    scene.add(radiationOrb);
+
+    const radiationLight = new THREE.PointLight(0x38bdf8, 2.5, 6.0);
+    radiationOrb.add(radiationLight);
+
+    const mousePlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1.8);
+    const raycaster = new THREE.Raycaster();
+    const mouseNorm = new THREE.Vector2(0, 0);
+    const targetRadiationPos = new THREE.Vector3(1.5, 1.8, 1.5);
+
+    window.addEventListener('mousemove', (e) => {
+      mouseNorm.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseNorm.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouseNorm, camera);
+      const intersect = new THREE.Vector3();
+      if (raycaster.ray.intersectPlane(mousePlane, intersect)) {
+        targetRadiationPos.copy(intersect);
+      }
+    });
+
+    // --- SPECIES PRESETS (DEFAULT: TRUE OBSIDIAN NOOSPORA) ---
+    const SPECIES_PRESETS = {
+      noosphere: {
+        name: "記憶噬電擬網菌 (Noospora Memorabilis // 活體硬碟)",
+        capColor: 0x050608,        // True carbon obsidian black, zero green!
+        capEmissive: 0x0284c7,      // Pure electric quantum cyan
+        capEmissiveIntensity: 0.85,
+        stipeColor: 0x111827,
+        stipeEmissive: 0x38bdf8,
+        stipeEmissiveIntensity: 0.65,
+        gillColor: 0x38bdf8,
+        gillEmissive: 0x0284c7,
+        sporeColor: 0x7dd3fc,
+        lightColor: 0x38bdf8,
+        roughness: 0.16,
+        metalness: 0.90
+      },
+      melanin: {
+        name: "黑天鵝噬電菌 (Melanin Radiotrophic)",
+        capColor: 0x040507,
+        capEmissive: 0x38bdf8,
+        capEmissiveIntensity: 0.6,
+        stipeColor: 0x161e2e,
+        stipeEmissive: 0x6366f1,
+        stipeEmissiveIntensity: 0.45,
+        gillColor: 0x38bdf8,
+        gillEmissive: 0x0284c7,
+        sporeColor: 0x38bdf8,
+        lightColor: 0x38bdf8,
+        roughness: 0.18,
+        metalness: 0.88
+      },
+      mycena: {
+        name: "幽冥螢光小菇 (Bioluminescent Mycena)",
+        capColor: 0x064e3b,
+        capEmissive: 0x10b981,
+        capEmissiveIntensity: 0.85,
+        stipeColor: 0xd1fae5,
+        stipeEmissive: 0x059669,
+        stipeEmissiveIntensity: 0.45,
+        gillColor: 0xa7f3d0,
+        gillEmissive: 0x34d399,
+        sporeColor: 0x6ee7b7,
+        lightColor: 0x34d399,
+        roughness: 0.35,
+        metalness: 0.1
+      },
+      ghost: {
+        name: "幽靈白傘 (Ghost Destroying Angel)",
+        capColor: 0xf1f5f9,
+        capEmissive: 0x93c5fd,
+        capEmissiveIntensity: 0.35,
+        stipeColor: 0xe2e8f0,
+        stipeEmissive: 0x60a5fa,
+        stipeEmissiveIntensity: 0.2,
+        gillColor: 0xffffff,
+        gillEmissive: 0xbfdbfe,
+        sporeColor: 0xdbeafe,
+        lightColor: 0x93c5fd,
+        roughness: 0.28,
+        metalness: 0.1
+      },
+      amanita: {
+        name: "毒蠅傘幻境 (Amanita Muscaria)",
+        capColor: 0xcc1414,
+        capEmissive: 0x590404,
+        capEmissiveIntensity: 0.3,
+        stipeColor: 0xf8fafc,
+        stipeEmissive: 0x94a3b8,
+        stipeEmissiveIntensity: 0.1,
+        gillColor: 0xffffff,
+        gillEmissive: 0xcccccc,
+        sporeColor: 0xffffff,
+        lightColor: 0xff6b6b,
+        roughness: 0.45,
+        metalness: 0.1
+      }
+    };
+
+    let activePreset = SPECIES_PRESETS.noosphere;
+
+    // --- M3 INSTINCTIVE DYNAMIC MUSHROOM CLASS ---
+    class DynamicMushroom {
+      constructor(scene, options = {}) {
+        this.scene = scene;
+        this.group = new THREE.Group();
+        this.scene.add(this.group);
+
+        this.offsetX = options.x || 0;
+        this.offsetZ = options.z || 0;
+        this.scaleMultiplier = options.scale || 1.0;
+        this.phaseShift = options.phaseShift || 0;
+        this.baseCurveDir = options.curveDir || 0;
+
+        // M3 Instinct state variables
+        this.currentCurveDir = this.baseCurveDir;
+        this.currentCurvature = 0.35;
+        this.swayPhase = Math.random() * Math.PI * 2;
+        this.targetAttraction = 0;
+
+        this.group.position.set(this.offsetX, 0, this.offsetZ);
+
+        this.capMat = new THREE.MeshStandardMaterial({
+          color: activePreset.capColor,
+          emissive: activePreset.capEmissive,
+          emissiveIntensity: activePreset.capEmissiveIntensity,
+          roughness: activePreset.roughness,
+          metalness: activePreset.metalness,
+          side: THREE.DoubleSide
+        });
+
+        this.stipeMat = new THREE.MeshStandardMaterial({
+          color: activePreset.stipeColor,
+          emissive: activePreset.stipeEmissive,
+          emissiveIntensity: activePreset.stipeEmissiveIntensity,
+          roughness: 0.55,
+          metalness: 0.15
+        });
+
+        this.gillsMat = new THREE.MeshStandardMaterial({
+          color: activePreset.gillColor,
+          emissive: activePreset.gillEmissive,
+          emissiveIntensity: 0.85,
+          roughness: 0.3,
+          side: THREE.DoubleSide
+        });
+
+        this.veilMat = new THREE.MeshStandardMaterial({
+          color: activePreset.stipeColor,
+          transparent: true,
+          opacity: 0.85,
+          roughness: 0.8,
+          side: THREE.DoubleSide
+        });
+
+        this.capRings = 24;
+        this.capSegments = 40;
+        this.capGeo = new THREE.CylinderGeometry(0.1, 1, 0.5, this.capSegments, this.capRings, true);
+        this.capMesh = new THREE.Mesh(this.capGeo, this.capMat);
+        this.capMesh.castShadow = true;
+        this.group.add(this.capMesh);
+
+        this.stipeRings = 24;
+        this.stipeSegments = 16;
+        this.stipeGeo = new THREE.CylinderGeometry(0.1, 0.18, 2.5, this.stipeSegments, this.stipeRings, true);
+        this.stipeMesh = new THREE.Mesh(this.stipeGeo, this.stipeMat);
+        this.stipeMesh.castShadow = true;
+        this.group.add(this.stipeMesh);
+
+        this.gillsGeo = new THREE.RingGeometry(0.12, 1.0, 36, 4);
+        this.gillsGeo.rotateX(Math.PI / 2);
+        this.gillsMesh = new THREE.Mesh(this.gillsGeo, this.gillsMat);
+        this.group.add(this.gillsMesh);
+
+        this.veilGeo = new THREE.TorusGeometry(0.22, 0.06, 8, 24);
+        this.veilGeo.rotateX(Math.PI / 2);
+        this.veilMesh = new THREE.Mesh(this.veilGeo, this.veilMat);
+        this.group.add(this.veilMesh);
+
+        this.lastCapApexY = 1.0;
+        this.lastCapRadius = 0.5;
+      }
+
+      applyPreset(p) {
+        this.capMat.color.setHex(p.capColor);
+        this.capMat.emissive.setHex(p.capEmissive);
+        this.capMat.emissiveIntensity = p.capEmissiveIntensity;
+        this.capMat.roughness = p.roughness;
+        this.capMat.metalness = p.metalness;
+
+        this.stipeMat.color.setHex(p.stipeColor);
+        this.stipeMat.emissive.setHex(p.stipeEmissive);
+        this.stipeMat.emissiveIntensity = p.stipeEmissiveIntensity;
+
+        this.gillsMat.color.setHex(p.gillColor);
+        this.gillsMat.emissive.setHex(p.gillEmissive);
+
+        this.veilMat.color.setHex(p.stipeColor);
+      }
+
+      update(globalGrowth, params, time, radiationPos) {
+        const g = Math.max(0.01, Math.min(1.0, (globalGrowth - this.phaseShift) / (1.0 - this.phaseShift * 0.6)));
+        const baseHeight = (0.25 + 2.2 * Math.pow(g, 0.85)) * this.scaleMultiplier;
+        const capOpening = params.flaring;
+        const waviness = params.waviness;
+
+        // --- M3 SENSE-THINK-ACT: ELECTROTROPIC STEERING BEHAVIOR ---
+        if (state.enableTracking && radiationPos) {
+          const dx = radiationPos.x - this.offsetX;
+          const dz = radiationPos.z - this.offsetZ;
+          const dist = Math.hypot(dx, dz);
+          const targetAngle = Math.atan2(dx, dz);
+
+          // Angle lerping with shortest arc
+          let diff = targetAngle - this.currentCurveDir;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          this.currentCurveDir += diff * 0.08 * state.sensitivity;
+
+          // Proximity attraction calculation
+          const maxDist = 6.5;
+          this.targetAttraction = Math.max(0, 1.0 - dist / maxDist) * (state.uptakeMultiplier / 100.0);
+          this.currentCurvature = THREE.MathUtils.lerp(
+            this.currentCurvature,
+            params.curvature + this.targetAttraction * 0.45 * state.sensitivity,
+            0.08
+          );
+
+          // Proximity absorption: boost cap emissive & pulse
+          const boost = this.targetAttraction * 0.75 + state.burstDecay * 1.5;
+          this.capMat.emissiveIntensity = activePreset.capEmissiveIntensity + boost;
+        } else {
+          // Autonomous subtle sway when tracking is disabled
+          this.swayPhase += 0.02;
+          this.currentCurveDir = this.baseCurveDir + Math.sin(this.swayPhase) * 0.15;
+          this.currentCurvature = params.curvature;
+          this.targetAttraction = 0;
+          this.capMat.emissiveIntensity = activePreset.capEmissiveIntensity + state.burstDecay * 1.5;
+        }
+
+        // 1. UPDATE STIPE VERTICES IN-PLACE
+        const sPos = this.stipeGeo.attributes.position.array;
+        const swayAmp = 0.25 * this.currentCurvature * this.scaleMultiplier;
+        const curveDir = this.currentCurveDir;
+        const stemRadius = (0.16 - 0.05 * g) * this.scaleMultiplier;
+
+        let apexX = 0, apexY = baseHeight, apexZ = 0;
+
+        for (let r = 0; r <= this.stipeRings; r++) {
+          const t = r / this.stipeRings;
+          const y = t * baseHeight;
+          const sway = Math.sin(t * Math.PI) * swayAmp;
+          const cx = Math.cos(curveDir) * sway;
+          const cz = Math.sin(curveDir) * sway;
+
+          if (r === this.stipeRings) {
+            apexX = cx; apexY = y; apexZ = cz;
+          }
+
+          const rCur = stemRadius * (1.25 - 0.45 * t);
+
+          for (let s = 0; s <= this.stipeSegments; s++) {
+            const angle = (s / this.stipeSegments) * Math.PI * 2;
+            const idx = (r * (this.stipeSegments + 1) + s) * 3;
+            sPos[idx + 0] = cx + Math.cos(angle) * rCur;
+            sPos[idx + 1] = y;
+            sPos[idx + 2] = cz + Math.sin(angle) * rCur;
+          }
+        }
+        this.stipeGeo.attributes.position.needsUpdate = true;
+        this.stipeGeo.computeVertexNormals();
+
+        this.lastCapApexY = apexY;
+
+        // 2. UPDATE ANNULUS (Veil collar)
+        const veilT = 0.68;
+        const veilSway = Math.sin(veilT * Math.PI) * swayAmp;
+        this.veilMesh.position.set(
+          Math.cos(curveDir) * veilSway,
+          veilT * baseHeight,
+          Math.sin(curveDir) * veilSway
+        );
+        const veilScale = (0.7 + 0.6 * Math.min(1.0, g * 1.5)) * this.scaleMultiplier;
+        this.veilMesh.scale.set(veilScale, veilScale * (1.0 + g * 0.5), veilScale);
+        this.veilMat.opacity = Math.max(0.12, 1.0 - g * 0.55);
+
+        // 3. UPDATE CAP VERTICES
+        const maxR = (0.22 + 1.25 * Math.pow(g, 0.75) * capOpening) * this.scaleMultiplier;
+        this.lastCapRadius = maxR;
+        const domeDepth = (0.45 * (1.0 - g * 0.45)) * this.scaleMultiplier;
+        const cPos = this.capGeo.attributes.position.array;
+
+        for (let r = 0; r <= this.capRings; r++) {
+          const u = r / this.capRings;
+          const ringR = maxR * Math.sin(u * Math.PI * 0.5);
+          const edgeFlare = Math.pow(u, 4) * (g > 0.75 ? (g - 0.75) * 0.35 : 0.0);
+          const ringY = domeDepth * Math.cos(u * Math.PI * 0.52) + edgeFlare;
+
+          for (let s = 0; s <= this.capSegments; s++) {
+            const angle = (s / this.capSegments) * Math.PI * 2;
+            const idx = (r * (this.capSegments + 1) + s) * 3;
+
+            let wave = 0;
+            if (u > 0.35) {
+              const edgeFactor = (u - 0.35) / 0.65;
+              wave = Math.sin(angle * 12.0) * waviness * edgeFactor * 0.3;
+            }
+
+            cPos[idx + 0] = Math.cos(angle) * (ringR + wave);
+            cPos[idx + 1] = ringY + (wave * 0.4);
+            cPos[idx + 2] = Math.sin(angle) * (ringR + wave);
+          }
+        }
+        this.capGeo.attributes.position.needsUpdate = true;
+        this.capGeo.computeVertexNormals();
+
+        this.capMesh.position.set(apexX, apexY, apexZ);
+        this.capMesh.rotation.z = Math.sin(curveDir) * swayAmp * 0.7;
+        this.capMesh.rotation.x = -Math.cos(curveDir) * swayAmp * 0.7;
+
+        // 4. UPDATE GILLS
+        this.gillsMesh.position.set(apexX, apexY - 0.02, apexZ);
+        this.gillsMesh.rotation.copy(this.capMesh.rotation);
+        const gillScale = maxR * 0.95;
+        this.gillsMesh.scale.set(gillScale, 1.0, gillScale);
+
+        this.group.visible = globalGrowth >= this.phaseShift * 0.5;
+      }
+    }
+
+    // --- INSTANTIATE SPECIMENS ---
+    const mushrooms = [];
+    mushrooms.push(new DynamicMushroom(scene, { x: 0, z: 0, scale: 1.0, phaseShift: 0, curveDir: 0.4 }));
+    mushrooms.push(new DynamicMushroom(scene, { x: -0.65, z: 0.35, scale: 0.72, phaseShift: 0.18, curveDir: 2.5 }));
+    mushrooms.push(new DynamicMushroom(scene, { x: 0.55, z: -0.4, scale: 0.52, phaseShift: 0.38, curveDir: -1.2 }));
+
+    // Apply default Noosphere preset
+    mushrooms.forEach(m => m.applyPreset(activePreset));
+    clusterGlowLight.color.setHex(activePreset.lightColor);
+    rimLight.color.setHex(activePreset.lightColor);
+
+    // --- UI STATE & CONTROLS BINDING ---
+    const state = {
+      progress: 80,
+      isPlaying: true,
+      isLooping: false,
+      speed: 1.0,
+      flaring: 1.10,
+      waviness: 0.08,
+      curvature: 0.35,
+      clusterMode: 'duo',
+      sporeCount: 1200,
+      vortexSpeed: 1.2,
+      pulseSpeed: 1.8,
+      audioActive: false,
+      envGlow: 1.0,
+      enableTracking: true,
+      sensitivity: 1.2,
+      uptakeMultiplier: 100,
+      burstDecay: 0.0
+    };
+
+    const slProgress = document.getElementById('sl-progress');
+    const vProgress = document.getElementById('v-progress');
+    const txtStage = document.getElementById('txt-stage');
+    const slSpeed = document.getElementById('sl-speed');
+    const vSpeed = document.getElementById('v-speed');
+    const btnPlay = document.getElementById('btn-play');
+    const btnLoop = document.getElementById('btn-loop');
+    const btnReset = document.getElementById('btn-reset');
+
+    const slSens = document.getElementById('sl-sens');
+    const vSens = document.getElementById('v-sens');
+    const slUptake = document.getElementById('sl-uptake');
+    const vUptake = document.getElementById('v-uptake');
+    const btnToggleTracking = document.getElementById('btn-toggle-tracking');
+    const btnTriggerBurst = document.getElementById('btn-trigger-burst');
+    const txtInstinct = document.getElementById('txt-instinct');
+
+    const telState = document.getElementById('tel-state');
+    const telDist = document.getElementById('tel-dist');
+    const telAngle = document.getElementById('tel-angle');
+    const telUptake = document.getElementById('tel-uptake');
+    const telHeight = document.getElementById('tel-height');
+    const telCap = document.getElementById('tel-cap');
+    const telSpores = document.getElementById('tel-spores');
+
+    function triggerDischarge() {
+      state.burstDecay = 1.0;
+      telState.textContent = "[ST_ELMO_DISCHARGE / 放電爆發]";
+      telState.style.color = "#f43f5e";
+      setTimeout(() => {
+        telState.textContent = "[TRACKING_RADIATION / 趨電導向]";
+        telState.style.color = "#38bdf8";
+      }, 900);
+
+      // Fast spore ejection burst
+      const mainApexY = mushrooms[0].lastCapApexY;
+      const mainRadius = mushrooms[0].lastCapRadius;
+      const positions = sporeGeo.attributes.position.array;
+      for (let i = 0; i < 250; i++) {
+        const spawnAngle = Math.random() * Math.PI * 2;
+        const spawnR = (0.2 + Math.random() * 0.9) * mainRadius;
+        positions[i * 3 + 0] = Math.cos(spawnAngle) * spawnR;
+        positions[i * 3 + 1] = Math.max(0.4, mainApexY - 0.1);
+        positions[i * 3 + 2] = Math.sin(spawnAngle) * spawnR;
+        sporeVelocities[i].set(
+          (Math.random() - 0.5) * 0.08,
+          0.04 + Math.random() * 0.06,
+          (Math.random() - 0.5) * 0.08
+        );
+        sporeLifetimes[i] = 0;
+      }
+      sporeGeo.attributes.position.needsUpdate = true;
+    }
+
+    window.addEventListener('click', (e) => {
+      if (e.target.closest('.hud')) return;
+      triggerDischarge();
+    });
+
+    btnTriggerBurst.addEventListener('click', triggerDischarge);
+
+    btnToggleTracking.addEventListener('click', () => {
+      state.enableTracking = !state.enableTracking;
+      btnToggleTracking.classList.toggle('active', state.enableTracking);
+      btnToggleTracking.textContent = state.enableTracking ? '趨電性追隨: 開' : '趨電性追隨: 關';
+      txtInstinct.textContent = state.enableTracking ? '趨電追隨中' : '自律休眠中';
+      telState.textContent = state.enableTracking ? '[TRACKING_RADIATION]' : '[IDLE_RESPIRATION]';
+      telState.style.color = state.enableTracking ? '#38bdf8' : '#94a3b8';
+    });
+
+    slSens.addEventListener('input', (e) => {
+      state.sensitivity = parseFloat(e.target.value);
+      vSens.textContent = `${state.sensitivity.toFixed(1)}x`;
+    });
+
+    slUptake.addEventListener('input', (e) => {
+      state.uptakeMultiplier = parseFloat(e.target.value);
+      vUptake.textContent = `${state.uptakeMultiplier}%`;
+    });
+
+    function updateStageName(p) {
+      const nodes = document.querySelectorAll('.timeline-node');
+      nodes.forEach(n => n.classList.remove('active'));
+
+      if (p < 20) {
+        txtStage.textContent = "① 原基卵蕾期 (Button)";
+        nodes[0].classList.add('active');
+      } else if (p < 48) {
+        txtStage.textContent = "② 菌柄拔高向光期 (Stretching)";
+        nodes[1].classList.add('active');
+      } else if (p < 72) {
+        txtStage.textContent = "③ 菌幕破裂展露 (Veil Rupture)";
+        nodes[2].classList.add('active');
+      } else if (p < 90) {
+        txtStage.textContent = "④ 膨脹開傘微分期 (Cap Flaring)";
+        nodes[3].classList.add('active');
+      } else {
+        txtStage.textContent = "⑤ 孢子狂湧成熟期 (Sporulation)";
+        nodes[4].classList.add('active');
+      }
+    }
+
+    slProgress.addEventListener('input', (e) => {
+      state.progress = parseFloat(e.target.value);
+      vProgress.textContent = `${Math.round(state.progress)}%`;
+      updateStageName(state.progress);
+    });
+
+    slSpeed.addEventListener('input', (e) => {
+      state.speed = parseFloat(e.target.value);
+      vSpeed.textContent = `${state.speed.toFixed(1)}x`;
+    });
+
+    btnPlay.addEventListener('click', () => {
+      state.isPlaying = !state.isPlaying;
+      btnPlay.textContent = state.isPlaying ? '暫停縮時' : '自動縮時播放';
+      btnPlay.classList.toggle('active', state.isPlaying);
+    });
+
+    btnLoop.addEventListener('click', () => {
+      state.isLooping = !state.isLooping;
+      btnLoop.classList.toggle('active', state.isLooping);
+      btnLoop.textContent = state.isLooping ? '生滅迴圈: 開' : '生滅迴圈: 關';
+    });
+
+    btnReset.addEventListener('click', () => {
+      state.progress = 0;
+      slProgress.value = 0;
+      vProgress.textContent = "0%";
+      updateStageName(0);
+    });
+
+    document.querySelectorAll('.timeline-node').forEach(node => {
+      node.addEventListener('click', () => {
+        state.progress = parseFloat(node.dataset.target);
+        slProgress.value = state.progress;
+        vProgress.textContent = `${Math.round(state.progress)}%`;
+        updateStageName(state.progress);
+      });
+    });
+
+    function applySpecies(key) {
+      activePreset = SPECIES_PRESETS[key];
+      document.querySelectorAll('[id^="preset-"]').forEach(b => b.classList.remove('active'));
+      document.getElementById(`preset-${key}`).classList.add('active');
+
+      mushrooms.forEach(m => m.applyPreset(activePreset));
+      sporeMat.color.setHex(activePreset.sporeColor);
+      clusterGlowLight.color.setHex(activePreset.lightColor);
+      rimLight.color.setHex(activePreset.lightColor);
+    }
+
+    document.getElementById('preset-noosphere').addEventListener('click', () => applySpecies('noosphere'));
+    document.getElementById('preset-melanin').addEventListener('click', () => applySpecies('melanin'));
+    document.getElementById('preset-mycena').addEventListener('click', () => applySpecies('mycena'));
+    document.getElementById('preset-ghost').addEventListener('click', () => applySpecies('ghost'));
+    document.getElementById('preset-amanita').addEventListener('click', () => applySpecies('amanita'));
+
+    // Camera viewpoints
+    document.getElementById('cam-wide-env').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(0, 5.0, 11.5), new THREE.Vector3(0, 1.5, 0));
+    });
+    document.getElementById('cam-cinematic').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(0, 3.2, 5.8), new THREE.Vector3(0, 1.3, 0));
+    });
+    document.getElementById('cam-gills').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(0.1, 0.9, 1.8), new THREE.Vector3(0, 1.6, 0));
+    });
+    document.getElementById('cam-cap').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(0.2, 3.8, 1.4), new THREE.Vector3(0, 2.0, 0));
+    });
+    document.getElementById('cam-mycelium').addEventListener('click', () => {
+      animateCamera(new THREE.Vector3(1.8, 0.7, 2.2), new THREE.Vector3(0, 0.2, 0));
+    });
+
+    let camTween = null;
+    function animateCamera(targetPos, targetLookAt) {
+      const startPos = camera.position.clone();
+      const startTarget = controls.target.clone();
+      let alpha = 0;
+      if (camTween) clearInterval(camTween);
+      camTween = setInterval(() => {
+        alpha += 0.05;
+        if (alpha >= 1) {
+          alpha = 1;
+          clearInterval(camTween);
+        }
+        const ease = 0.5 - 0.5 * Math.cos(Math.PI * alpha);
+        camera.position.lerpVectors(startPos, targetPos, ease);
+        controls.target.lerpVectors(startTarget, targetLookAt, ease);
+      }, 16);
+    }
+
+    // --- SYNTHETIC 55HZ SPECTRUM BLIND SPOT SOUND & QUANTUM NOISE ---
+    let audioCtx = null;
+    let droneOsc = null;
+    let noiseNode = null;
+    const soundBtn = document.getElementById('sound-btn');
+
+    soundBtn.addEventListener('click', () => {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        droneOsc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        droneOsc.type = 'sine';
+        droneOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(180, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.09, audioCtx.currentTime);
+
+        droneOsc.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        droneOsc.start();
+
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          output[i] = (b0 + b1 + b2) * 0.04;
+        }
+
+        noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = noiseBuffer;
+        noiseNode.loop = true;
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(320, audioCtx.currentTime);
+        noiseFilter.Q.setValueAtTime(1.2, audioCtx.currentTime);
+
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+
+        noiseNode.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(audioCtx.destination);
+        noiseNode.start();
+
+        state.audioActive = true;
+        soundBtn.innerHTML = `<span>頻譜盲區防護聲態: 開啟 (55Hz 胞質頻率 ✕ 量子熱噪)</span>`;
+      } else {
+        if (audioCtx.state === 'running') {
+          audioCtx.suspend();
+          state.audioActive = false;
+          soundBtn.innerHTML = `<span>頻譜盲區防護聲態: 關</span>`;
+        } else {
+          audioCtx.resume();
+          state.audioActive = true;
+          soundBtn.innerHTML = `<span>頻譜盲區防護聲態: 開啟 (55Hz 胞質頻率 ✕ 量子熱噪)</span>`;
+        }
+      }
+    });
+
+    // --- MAIN ANIMATION & INSTINCT SIMULATION LOOP ---
+    let clock = new THREE.Clock();
+    let growthDirection = 1;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      // Smooth radiation tracker position
+      radiationOrb.position.lerp(targetRadiationPos, 0.08);
+
+      // Decay discharge burst
+      if (state.burstDecay > 0) {
+        state.burstDecay = Math.max(0, state.burstDecay - delta * 2.5);
+      }
+
+      // 1. Advance Growth Time-Lapse
+      if (state.isPlaying) {
+        const step = delta * 6.5 * state.speed * growthDirection;
+        state.progress += step;
+
+        if (state.progress >= 100) {
+          if (state.isLooping) {
+            state.progress = 100;
+            growthDirection = -1;
+          } else {
+            state.progress = 0;
+          }
+        } else if (state.progress <= 0 && state.isLooping) {
+          state.progress = 0;
+          growthDirection = 1;
+        }
+
+        slProgress.value = state.progress;
+        vProgress.textContent = `${Math.round(state.progress)}%`;
+        updateStageName(state.progress);
+      }
+
+      const normGrowth = state.progress / 100.0;
+
+      // 2. Update Dynamic Mushrooms with Instinct Inputs
+      mushrooms.forEach(m => {
+        m.update(normGrowth, state, time, radiationOrb.position);
+      });
+
+      // 3. Ground Mycelium Biological Pulse & Memory Packet Transmission
+      const primaryAttraction = mushrooms[0].targetAttraction;
+      const dynamicPulseSpeed = state.pulseSpeed * (1.0 + primaryAttraction * 1.8);
+
+      myceliumLines.forEach((item) => {
+        const pulse = 0.5 + 0.5 * Math.sin(time * dynamicPulseSpeed * 2.0 + item.offset);
+        const packetPhase = (time * (5.0 + primaryAttraction * 4.0) * state.vortexSpeed + item.distRatio * 14.0) % 6.28;
+        const packet = Math.pow(Math.max(0, Math.sin(packetPhase)), 16.0);
+        
+        item.mat.emissiveIntensity = (item.baseEmissive * (0.35 + 0.9 * pulse) + packet * 3.5 + state.burstDecay * 2.0) * state.envGlow;
+        if (packet > 0.35 || state.burstDecay > 0.3) {
+          item.mat.emissive.setHex(0xa5f3fc);
+        } else {
+          item.mat.emissive.setHex(activePreset.stipeEmissive);
+        }
+      });
+
+      // 4. Spore Dynamics
+      const positions = sporeGeo.attributes.position.array;
+      const mainApexY = mushrooms[0].lastCapApexY;
+      const mainRadius = mushrooms[0].lastCapRadius;
+      const sporeActive = normGrowth > 0.45;
+      const activeCount = sporeActive ? Math.min(MAX_SPORES, state.sporeCount) : 0;
+
+      for (let i = 0; i < MAX_SPORES; i++) {
+        if (i < activeCount) {
+          sporeLifetimes[i] += delta * 15 * state.vortexSpeed;
+
+          if (sporeLifetimes[i] > sporeMaxLives[i] || positions[i * 3 + 1] > 6.0) {
+            sporeLifetimes[i] = 0;
+            const spawnAngle = Math.random() * Math.PI * 2;
+            const spawnR = (0.1 + Math.random() * 0.8) * mainRadius;
+            positions[i * 3 + 0] = Math.cos(spawnAngle) * spawnR;
+            positions[i * 3 + 1] = Math.max(0.4, mainApexY - 0.15 - Math.random() * 0.1);
+            positions[i * 3 + 2] = Math.sin(spawnAngle) * spawnR;
+
+            sporeVelocities[i].set(
+              (Math.random() - 0.5) * 0.012,
+              0.008 + Math.random() * 0.018 * state.vortexSpeed,
+              (Math.random() - 0.5) * 0.012
+            );
+          } else {
+            const y = positions[i * 3 + 1];
+            const vortexAngle = time * 0.8 * state.vortexSpeed + y * 1.5;
+            positions[i * 3 + 0] += sporeVelocities[i].x + Math.cos(vortexAngle) * 0.004 * state.vortexSpeed;
+            positions[i * 3 + 1] += sporeVelocities[i].y;
+            positions[i * 3 + 2] += sporeVelocities[i].z + Math.sin(vortexAngle) * 0.004 * state.vortexSpeed;
+          }
+        } else {
+          positions[i * 3 + 1] = -10.0;
+        }
+      }
+      sporeGeo.attributes.position.needsUpdate = true;
+
+      // 5. Update Real-time Instinct Telemetry
+      const curDist = mushrooms[0].group.position.distanceTo(radiationOrb.position);
+      telDist.textContent = `${curDist.toFixed(1)} m`;
+      const curDeg = (mushrooms[0].currentCurvature * 28.5);
+      telAngle.textContent = `${curDeg.toFixed(1)}°`;
+      const curUptake = (primaryAttraction * 14.8).toFixed(1);
+      telUptake.textContent = `${curUptake} mJ/s`;
+
+      const curH = (0.25 + 2.2 * Math.pow(normGrowth, 0.85)) * 3.5;
+      telHeight.textContent = `${curH.toFixed(1)} cm`;
+      const curD = (0.22 + 1.25 * Math.pow(normGrowth, 0.75) * state.flaring) * 4.2;
+      telCap.textContent = `${curD.toFixed(1)} cm`;
+      const curSpores = sporeActive ? Math.round(normGrowth * state.sporeCount * 0.85) : 0;
+      telSpores.textContent = `${curSpores} 顆/秒`;
+
+      // 6. Sky & Tree Breathing
+      if (skyDome && skyDome.material.uniforms) {
+        skyDome.material.uniforms.time.value = time;
+      }
+      treeVinesList.forEach(item => {
+        const vPulse = 0.5 + 0.5 * Math.sin(time * state.pulseSpeed * 1.5 + item.phase);
+        item.mat.emissiveIntensity = item.baseIntensity * (0.6 + 0.9 * vPulse);
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateStageName(state.progress);
+    animate();
+  </script>
+</body>
+</html>
